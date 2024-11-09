@@ -1,0 +1,3 @@
+test/firsttry.py
+*.pyc
+.coverage
