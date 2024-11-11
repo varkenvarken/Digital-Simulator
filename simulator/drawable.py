@@ -96,8 +96,8 @@ class Line(Drawable):
             draw.rect(surface, "red", rect, 1)
 
     def collideconnector(self, pos):
-        return False
-        
+        return False, None
+
 def rotate_rectangle(r:Rect, angle):
     angle = radians(angle)
     s = sin(angle)
@@ -143,20 +143,25 @@ class AndGate(Image):
     def rotate(self, angle):
         super().rotate(angle)
         self.overlay = transform.rotate(self.overlay, angle)
+
+        print(self.output[0])
+        self.output[0].rotate_ip(-angle)
+        print(self.output[0])
+        
         self.angle = angle
 
     def collideconnector(self, pos):
-        r = self.overlay.get_rect()
-        print(f"current {r=}")
-        r = rotate_rectangle(r, -self.angle)
-        r.center = self.pos
-        print(f"original {r=}")
+        # r = self.overlay.get_rect()
+        # print(f"current {r=}")
+        # r = rotate_rectangle(r, -self.angle)
+        # r.center = self.pos
+        # print(f"original {r=}")
         p = Vector2(pos)
         rp = p - self.pos
         result = (self.output[0] - rp).length() <= self.output[1]
 
         print(f"{pos=} {self.pos=} {self.output[0]=} {rp=} {result=}")
-        return result
+        return result, self.output[0] + self.pos
 
 if __name__ == "__main__":
     FPS = 60
@@ -196,11 +201,12 @@ if __name__ == "__main__":
                     line_start = line_end
                 else:
                     for i, r in enumerate(drawables):
-                        if r.collideconnector(event.pos):
+                        click, connector_position = r.collideconnector(event.pos)
+                        if click:
                             print(f"click on object {i} output at {event.pos}")
                             drawing = True
-                            line_start = Vector2(event.pos)
-                            line_end = Vector2(event.pos)
+                            line_start = Vector2(connector_position)
+                            line_end = Vector2(connector_position)
                             break
                         if r.collidepoint(event.pos):
                             active_object = i
