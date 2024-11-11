@@ -47,6 +47,7 @@ class Circle(Drawable):
         draw.circle(self.surface, color, (radius, radius), radius, linewidth)
         self.surface = self.surface.convert_alpha()
 
+
 class Line(Drawable):
     def __init__(self, start, end, color="black", linewidth=1):
         super().__init__(start)
@@ -64,16 +65,18 @@ class Line(Drawable):
                 self.away = True
 
         size = v
-        size[0] = max(linewidth+2, abs(size[0]))
-        size[1] = max(linewidth+2, abs(size[1]))
-        
+        size[0] = max(linewidth+15, abs(size[0]))
+        size[1] = max(linewidth+15, abs(size[1]))
+
         self.surface = Surface(size, pygame.SRCALPHA)
         rect = self.surface.get_rect()
 
         if self.vertical:
-            draw.line(self.surface, color, rect.midtop, rect.midbottom, linewidth)
+            draw.line(self.surface, color, rect.midtop,
+                      rect.midbottom, linewidth)
         else:
-            draw.line(self.surface, color, rect.midright, rect.midleft, linewidth)
+            draw.line(self.surface, color, rect.midright,
+                      rect.midleft, linewidth)
 
         self.surface = self.surface.convert_alpha()
 
@@ -95,10 +98,28 @@ class Line(Drawable):
         if self.selected:
             draw.rect(surface, "red", rect, 1)
 
+    def collidepoint(self, pos):
+        rect = self.surface.get_rect()
+        print(pos, self.pos, rect, self.vertical, self.away)
+        if self.vertical:
+            if self.away:
+                rect.midtop = self.pos
+            else:
+                rect.midbottom = self.pos
+        else:
+            if self.away:
+                rect.midright = self.pos
+            else:
+                rect.midleft = self.pos
+        print(pos, self.pos, rect)
+        return rect.collidepoint(*pos)
+
+
     def collideconnector(self, pos):
         return False, None
 
-def rotate_rectangle(r:Rect, angle):
+
+def rotate_rectangle(r: Rect, angle):
     angle = radians(angle)
     s = sin(angle)
     c = cos(angle)
@@ -109,7 +130,7 @@ def rotate_rectangle(r:Rect, angle):
     print(r)
 
     center = r.center
-    r.center = Vector2(0,0)
+    r.center = Vector2(0, 0)
 
     tl = rotate(r.topleft)
     tr = rotate(r.topright)
@@ -123,24 +144,29 @@ def rotate_rectangle(r:Rect, angle):
 
     return r
 
+
 class Hotspot:
     def __init__(self, position, radius):
         self.position = position
         self.radius = radius
+
 
 class AndGate(Image):
     def __init__(self, pos, size=None):
         super().__init__("icons/AND_ANSI_Labelled.svg", pos, size)
         r = self.surface.get_rect()
         self.overlay = Surface(r.size, pygame.SRCALPHA).convert_alpha()
-        self.output = Hotspot(Vector2(r.w-10,r.h//2) - self.overlay.get_rect().center,6)
-        
-        draw.circle(self.overlay, "black", self.output.position + self.overlay.get_rect().center, self.output.radius, 2)
+        self.output = Hotspot(Vector2(r.w-10, r.h//2) -
+                              self.overlay.get_rect().center, 6)
+
+        draw.circle(self.overlay, "black", self.output.position +
+                    self.overlay.get_rect().center, self.output.radius, 2)
 
         self.inputs = []
-        for hotspot in ((10,r.h//3), (10,2*r.h//3)):
-            draw.circle(self.overlay, "black", hotspot,6,2)
-            self.inputs.append(Hotspot(Vector2(hotspot) - self.overlay.get_rect().center,6))
+        for hotspot in ((10, r.h//3), (10, 2*r.h//3)):
+            draw.circle(self.overlay, "black", hotspot, 6, 2)
+            self.inputs.append(
+                Hotspot(Vector2(hotspot) - self.overlay.get_rect().center, 6))
 
         self.angle = 0
 
@@ -155,7 +181,7 @@ class AndGate(Image):
         self.overlay = transform.rotate(self.overlay, angle)
 
         self.output.position.rotate_ip(-angle)
-        
+
         self.angle = angle
 
     def collideconnector(self, pos):
@@ -171,11 +197,13 @@ class AndGate(Image):
                     return result, hotspot.position + self.pos
         return False, None
 
+
 if __name__ == "__main__":
     FPS = 60
 
     pygame.init()
-    pygame.display.set_icon(image.load(Path(__file__).parent / "icons/AND_ANSI_Labelled.svg"))
+    pygame.display.set_icon(image.load(
+        Path(__file__).parent / "icons/AND_ANSI_Labelled.svg"))
 
     clock = time.Clock()
 
@@ -194,8 +222,8 @@ if __name__ == "__main__":
     active_object = None
 
     drawing = False
-    line_start = Vector2(0,0)
-    line_end = Vector2(0,0)
+    line_start = Vector2(0, 0)
+    line_end = Vector2(0, 0)
 
     running = True
     while running:
@@ -205,11 +233,13 @@ if __name__ == "__main__":
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if drawing:
-                    drawables.append(Line(line_start,line_end,color="blue", linewidth=2))
+                    drawables.append(
+                        Line(line_start, line_end, color="blue", linewidth=2))
                     line_start = line_end
                 else:
                     for i, r in enumerate(drawables):
-                        click, connector_position = r.collideconnector(event.pos)
+                        click, connector_position = r.collideconnector(
+                            event.pos)
                         if click:
                             print(f"click on object {i} output at {event.pos}")
                             drawing = True
@@ -240,7 +270,7 @@ if __name__ == "__main__":
                     r.pos = event.pos + offset
                 elif drawing:
                     line_end = Vector2(event.pos)
-                    
+
             elif event.type == pygame.KEYUP:
                 print(event)
                 if event.unicode == 'r' and active_object is not None:
