@@ -346,6 +346,11 @@ if __name__ == "__main__":
                     line_end.x = line_start.x
             draw.line(screen, "green", line_start, line_end, 2)
 
+        if True:  # TODO make this a toggle
+            x,y = pygame.mouse.get_pos()
+            r = screen.get_rect()
+            draw.line(screen, "black", (0,y),(r.w,y))
+            draw.line(screen, "black", (x,0),(x,r.h))
         pygame.display.flip()
         clock.tick(FPS)
 
