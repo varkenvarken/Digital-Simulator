@@ -123,15 +123,25 @@ def rotate_rectangle(r:Rect, angle):
 
     return r
 
+class Hotspot:
+    def __init__(self, position, radius):
+        self.position = position
+        self.radius = radius
+
 class AndGate(Image):
     def __init__(self, pos, size=None):
         super().__init__("icons/AND_ANSI_Labelled.svg", pos, size)
         r = self.surface.get_rect()
         self.overlay = Surface(r.size, pygame.SRCALPHA).convert_alpha()
-        self.output = (Vector2(r.w-10,r.h//2) - self.overlay.get_rect().center,6)
-        draw.circle(self.overlay, "black", (r.w-10,r.h//2),6,2)
-        draw.circle(self.overlay, "black", (10,r.h//3),6,2)
-        draw.circle(self.overlay, "black", (10,2*r.h//3),6,2)
+        self.output = Hotspot(Vector2(r.w-10,r.h//2) - self.overlay.get_rect().center,6)
+        
+        draw.circle(self.overlay, "black", self.output.position + self.overlay.get_rect().center, self.output.radius, 2)
+
+        self.inputs = []
+        for hotspot in ((10,r.h//3), (10,2*r.h//3)):
+            draw.circle(self.overlay, "black", hotspot,6,2)
+            self.inputs.append(Hotspot(Vector2(hotspot) - self.overlay.get_rect().center,6))
+
         self.angle = 0
 
     def blit(self, surface):
@@ -144,24 +154,22 @@ class AndGate(Image):
         super().rotate(angle)
         self.overlay = transform.rotate(self.overlay, angle)
 
-        print(self.output[0])
-        self.output[0].rotate_ip(-angle)
-        print(self.output[0])
+        self.output.position.rotate_ip(-angle)
         
         self.angle = angle
 
     def collideconnector(self, pos):
-        # r = self.overlay.get_rect()
-        # print(f"current {r=}")
-        # r = rotate_rectangle(r, -self.angle)
-        # r.center = self.pos
-        # print(f"original {r=}")
         p = Vector2(pos)
         rp = p - self.pos
-        result = (self.output[0] - rp).length() <= self.output[1]
-
-        print(f"{pos=} {self.pos=} {self.output[0]=} {rp=} {result=}")
-        return result, self.output[0] + self.pos
+        result = (self.output.position - rp).length() <= self.output.radius
+        if result:
+            return result, self.output.position + self.pos
+        else:
+            for hotspot in self.inputs:
+                result = (hotspot.position - rp).length() <= hotspot.radius
+                if result:
+                    return result, hotspot.position + self.pos
+        return False, None
 
 if __name__ == "__main__":
     FPS = 60
