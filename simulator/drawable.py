@@ -82,19 +82,47 @@ class Line(Drawable):
 
         self.surface = self.surface.convert_alpha()
 
+        self.inputs = []
+        r = self.surface.get_rect()
+        self.overlay = Surface(r.size, pygame.SRCALPHA).convert_alpha()
+        if self.vertical:
+            self.output = Hotspot(Vector2(r.w//2, 0) -
+                                  self.overlay.get_rect().center, 6)
+            self.inputs.append(Hotspot(Vector2(r.w//2, r.h) -
+                                  self.overlay.get_rect().center, 6))
+        else:
+            self.output = Hotspot(Vector2(0, r.h//2) -
+                                  self.overlay.get_rect().center, 6)
+            self.inputs.append(Hotspot(Vector2(r.w, r.h//2) -
+                                  self.overlay.get_rect().center, 6))
+
+        draw.circle(self.overlay, "black", self.output.position +
+                    self.overlay.get_rect().center, self.output.radius, 2)
+
+        for hotspot in self.inputs:
+            draw.circle(self.overlay, "black", hotspot.position +
+                    self.overlay.get_rect().center, hotspot.radius, 2)
+    
     def blit(self, surface):
         rect = self.surface.get_rect()
+        recto = self.overlay.get_rect()
         if self.vertical:
             if self.away:
                 rect.midtop = self.pos
+                recto.midtop = self.pos
             else:
                 rect.midbottom = self.pos
+                recto.midbottom = self.pos
         else:
             if self.away:
                 rect.midright = self.pos
+                recto.midright = self.pos
             else:
                 rect.midleft = self.pos
+                recto.midleft = self.pos
         surface.blit(self.surface, rect)
+        surface.blit(self.overlay, rect)
+
         if self.active:
             draw.rect(surface, "orange", rect, 2)
         if self.selected:
@@ -105,6 +133,10 @@ class Line(Drawable):
         if self.vertical:
             self.away = not self.away
         self.vertical = not self.vertical
+        self.overlay = transform.rotate(self.overlay, angle)
+        self.output.position.rotate_ip(-angle)
+        for hotspot in self.inputs:
+            hotspot.position.rotate_ip(-angle)
 
     def collidepoint(self, pos):
         rect = self.surface.get_rect()
@@ -120,8 +152,29 @@ class Line(Drawable):
                 rect.midleft = self.pos
         return rect.collidepoint(*pos)
 
-
     def collideconnector(self, pos):
+        p = Vector2(pos)
+        rect = self.surface.get_rect()
+        if self.vertical:
+            if self.away:
+                rect.midtop = self.pos
+            else:
+                rect.midbottom = self.pos
+        else:
+            if self.away:
+                rect.midright = self.pos
+            else:
+                rect.midleft = self.pos
+        rp = p - rect.center
+        print(rect, self.output.position)
+        result = (self.output.position - rp).length() <= self.output.radius
+        if result:
+            return result, self.output.position + rect.center
+        else:
+            for hotspot in self.inputs:
+                result = (hotspot.position - rp).length() <= hotspot.radius
+                if result:
+                    return result, hotspot.position + rect.center
         return False, None
 
 
@@ -174,7 +227,6 @@ class AndGate(Image):
             self.inputs.append(
                 Hotspot(Vector2(hotspot) - self.overlay.get_rect().center, 6))
 
-
     def blit(self, surface):
         super().blit(surface)
         rect = self.overlay.get_rect()
@@ -184,10 +236,9 @@ class AndGate(Image):
     def rotate(self, angle):
         super().rotate(angle)
         self.overlay = transform.rotate(self.overlay, angle)
-
         self.output.position.rotate_ip(-angle)
-
-        self.angle = angle
+        for hotspot in self.inputs:
+            hotspot.position.rotate_ip(-angle)
 
     def collideconnector(self, pos):
         p = Vector2(pos)
