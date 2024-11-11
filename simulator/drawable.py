@@ -12,6 +12,7 @@ class Drawable:
         self.selected = False
         self.active = False
         self.pos = Vector2(pos)
+        self.angle = 0
 
     def blit(self, surface):
         rect = self.surface.get_rect()
@@ -24,6 +25,7 @@ class Drawable:
 
     def rotate(self, angle):
         self.surface = transform.rotate(self.surface, angle)
+        self.angle = angle
 
     def collidepoint(self, pos):
         rect = self.surface.get_rect()
@@ -98,9 +100,14 @@ class Line(Drawable):
         if self.selected:
             draw.rect(surface, "red", rect, 1)
 
+    def rotate(self, angle):
+        super().rotate(angle)
+        if self.vertical:
+            self.away = not self.away
+        self.vertical = not self.vertical
+
     def collidepoint(self, pos):
         rect = self.surface.get_rect()
-        print(pos, self.pos, rect, self.vertical, self.away)
         if self.vertical:
             if self.away:
                 rect.midtop = self.pos
@@ -111,7 +118,6 @@ class Line(Drawable):
                 rect.midright = self.pos
             else:
                 rect.midleft = self.pos
-        print(pos, self.pos, rect)
         return rect.collidepoint(*pos)
 
 
@@ -168,7 +174,6 @@ class AndGate(Image):
             self.inputs.append(
                 Hotspot(Vector2(hotspot) - self.overlay.get_rect().center, 6))
 
-        self.angle = 0
 
     def blit(self, surface):
         super().blit(surface)
