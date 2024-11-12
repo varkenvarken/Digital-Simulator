@@ -1,8 +1,9 @@
 from pathlib import Path
 import pygame
-from pygame import image, time, draw, Vector2, locals
+from pygame import image, time, draw, Vector2, locals, font, Rect
 
 from simulator.drawable import Line
+
 
 class Display:
     FPS = 60
@@ -25,6 +26,10 @@ class Display:
 
         self.drawables = []
 
+        self.font = font.Font(None, 16)
+
+        self.mode = "Edit"
+
     def flip(self):
         pygame.display.flip()
         self.clock.tick(self.FPS)
@@ -33,10 +38,23 @@ class Display:
     def quit():
         pygame.quit()
 
+    def status(self):
+        fg = "black"
+        bg = "grey90"
+        text = self.mode
+        size = self.font.size(text)
+        ren = self.font.render(text, 1, fg, bg)
+        rect = self.screen.get_rect()
+        y = rect.bottomleft[1] - self.font.get_linesize()
+        self.screen.fill(bg, Rect(0, y - 2, rect.w, self.font.get_linesize()))
+        draw.line(self.screen, fg, (0, y - 2), (rect.w, y - 2))
+        self.screen.blit(ren, (rect.bottomleft[0] + 5, y))
+
     def redraw(self):
         self.screen.fill("white")
         for d in self.drawables:
             d.blit(self.screen)
+        self.status()
 
     def draw_guides(self):
         x, y = pygame.mouse.get_pos()
@@ -51,7 +69,7 @@ class Display:
             d.active = False
 
     def edit(self):
-
+        self.mode = "Edit"
         self.reset()
 
         # Dragging control variables
@@ -74,7 +92,9 @@ class Display:
                     reason = "Quit"
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if drawing:
-                        self.drawables.append(Line(line_start, line_end, color="blue", linewidth=2))
+                        self.drawables.append(
+                            Line(line_start, line_end, color="blue", linewidth=2)
+                        )
                         line_start = line_end
                     else:
                         for i, r in enumerate(self.drawables):
@@ -131,12 +151,13 @@ class Display:
                 self.draw_guides()
 
             self.flip()
-        
+
         self.screen.fill("white")
         self.flip()
         return reason
-    
+
     def simulate(self):
+        self.mode = "Simulate"
         self.reset()
 
         running = True
@@ -158,7 +179,7 @@ class Display:
                         reason = "Stop simulation"
             self.redraw()
             self.flip()
-            
+
         self.screen.fill("white")
         self.flip()
         return reason
