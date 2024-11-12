@@ -52,8 +52,18 @@ class ConnectorOverlay(Drawable):
 
     def draw_connectors(self):
         for hotspot in self.connectors:
-            draw.circle(self.overlay, "black", hotspot.position +
-                        self.overlay.get_rect().center, hotspot.radius, 2)
+            draw.circle(
+                self.overlay,
+                "black",
+                hotspot.position + self.overlay.get_rect().center,
+                hotspot.radius,
+                2,
+            )
+
+    def create_connectors(self, connectors):
+        r = self.create_overlay()
+        self.connectors = connectors
+        self.draw_connectors()
 
     def blit(self, surface):
         super().blit(surface)
@@ -90,77 +100,79 @@ class Image(ConnectorOverlay):
 
 class Line(ConnectorOverlay):
     def __init__(self, start, end, color="black", linewidth=1):
-        super().__init__((end + start)//2)
+        super().__init__((end + start) // 2)
 
         vertical = False
         v = end - start
         if abs(v[1]) > abs(v[0]):  # vertical line
             vertical = True
 
-
         # always create the horizontal version
         size = v
         if vertical:
             size = size.yx
-        size[0] = max(linewidth+15, abs(size[0])) + 10
-        size[1] = max(linewidth+15, abs(size[1])) 
+        size[0] = max(linewidth + 15, abs(size[0])) + 10
+        size[1] = max(linewidth + 15, abs(size[1]))
 
         self.surface = Surface(size, pygame.SRCALPHA)
         rect = self.surface.get_rect()
-        delta = Vector2(5,0)
-        draw.line(self.surface, color, rect.midright-delta,
-                      rect.midleft+delta, linewidth)
+        delta = Vector2(5, 0)
+        draw.line(
+            self.surface, color, rect.midright - delta, rect.midleft + delta, linewidth
+        )
         self.surface = self.surface.convert_alpha()
 
-        r = self.create_overlay()
-
-        self.connectors.append(Hotspot(Vector2(5, r.h//2) -
-                                        self.overlay.get_rect().center, 6, "output"))
-        self.connectors.append(Hotspot(Vector2(r.w-5, r.h//2) -
-                                        self.overlay.get_rect().center, 6, "input"))
-
-        self.draw_connectors()
+        r = self.surface.get_rect()
+        self.create_connectors(
+            [
+                Hotspot(Vector2(5, r.h // 2) - r.center, 6, "output"),
+                Hotspot(Vector2(r.w - 5, r.h // 2) - r.center, 6, "input"),
+            ]
+        )
 
         if vertical:
             self.rotate(90)
+
 
 class Gate(Image):
     def __init__(self, path, pos, size=None):
         super().__init__(path, pos, size)
 
-        r = self.create_overlay()
+        r = self.surface.get_rect()
 
-        self.connectors.append(Hotspot(Vector2(r.w-10, r.h//2) -
-                                       self.overlay.get_rect().center, 6, "output"))
-        for hotspot in ((10, r.h//3), (10, 2*r.h//3)):
-            draw.circle(self.overlay, "black", hotspot, 6, 2)
-            self.connectors.append(
-                Hotspot(Vector2(hotspot) - self.overlay.get_rect().center, 6, "input"))
+        self.create_connectors(
+            [Hotspot(Vector2(r.w - 10, r.h // 2) - r.center, 6, "output")]
+            + [
+                Hotspot(Vector2(hotspot) - r.center, 6, "input")
+                for hotspot in ((10, r.h // 3), (10, 2 * r.h // 3))
+            ]
+        )
 
-        self.draw_connectors()
 
 class Input(Image):
     def __init__(self, pos, size=None):
         super().__init__("icons/INPUT.svg", pos, size)
 
-        r = self.create_overlay()
+        r = self.surface.get_rect()
 
-        self.connectors.append(Hotspot(Vector2(r.w-8, r.h//2) -
-                                       self.overlay.get_rect().center, 6, "output"))
-
-        self.draw_connectors()
+        self.create_connectors(
+            [
+                Hotspot(
+                    Vector2(r.w - 8, r.h // 2) - r.center,
+                    6,
+                    "output",
+                )
+            ]
+        )
 
 
 class Output(Image):
     def __init__(self, pos, size=None):
         super().__init__("icons/OUTPUT.svg", pos, size)
 
-        r = self.create_overlay()
+        r = self.surface.get_rect()
 
-        self.connectors.append(Hotspot(Vector2(8, r.h//2) -
-                                       self.overlay.get_rect().center, 6, "input"))
-
-        self.draw_connectors()
+        self.create_connectors([Hotspot(Vector2(8, r.h // 2) - r.center, 6, "input")])
 
 
 class AndGate(Gate):
@@ -172,8 +184,9 @@ if __name__ == "__main__":
     FPS = 60
 
     pygame.init()
-    pygame.display.set_icon(image.load(
-        Path(__file__).parent / "icons/AND_ANSI_Labelled.svg"))
+    pygame.display.set_icon(
+        image.load(Path(__file__).parent / "icons/AND_ANSI_Labelled.svg")
+    )
 
     clock = time.Clock()
 
@@ -183,8 +196,8 @@ if __name__ == "__main__":
     screen.fill("white")
 
     drawables = [AndGate((x, 300)) for x in (200, 400, 600)]
-    drawables.extend([Input((100,y)) for y in (200,300,400)])
-    drawables.extend([Output((700,y)) for y in (200,300,400)])
+    drawables.extend([Input((100, y)) for y in (200, 300, 400)])
+    drawables.extend([Output((700, y)) for y in (200, 300, 400)])
 
     # Dragging control variables
     dragging = False
@@ -206,12 +219,12 @@ if __name__ == "__main__":
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if drawing:
                     drawables.append(
-                        Line(line_start, line_end, color="blue", linewidth=2))
+                        Line(line_start, line_end, color="blue", linewidth=2)
+                    )
                     line_start = line_end
                 else:
                     for i, r in enumerate(drawables):
-                        click, connector_position = r.collideconnector(
-                            event.pos)
+                        click, connector_position = r.collideconnector(event.pos)
                         if click:
                             print(f"click on object {i} output at {event.pos}")
                             drawing = True
@@ -245,7 +258,7 @@ if __name__ == "__main__":
 
             elif event.type == pygame.KEYUP:
                 print(event)
-                if event.unicode == 'r' and active_object is not None:
+                if event.unicode == "r" and active_object is not None:
                     drawables[active_object].rotate(90)
 
         screen.fill("white")
