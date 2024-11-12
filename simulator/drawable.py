@@ -41,14 +41,9 @@ class Hotspot:
 
 
 class ConnectorOverlay(Drawable):
-    def __init__(self, pos, connectors=None):
+    def __init__(self, pos):
         super().__init__(pos)
-        self.connectors = connectors
-        if connectors:
-            self.create_overlay()
-            self.draw_connectors()
-        else:
-            self.connectors = []
+        self.connectors = []
 
     def create_overlay(self):
         r = self.surface.get_rect()
@@ -83,14 +78,15 @@ class ConnectorOverlay(Drawable):
                 return result, hotspot.position + rect.center
         return False, None
 
+
 class Image(ConnectorOverlay):
-    def __init__(self, path, pos, connectors=None, size=None):
+    def __init__(self, path, pos, size=None):
         self.surface = image.load(Path(__file__).parent / path)
         if size is not None:
             self.surface = transform.smoothscale(self.surface, size)
         self.surface = self.surface.convert_alpha()
-        super().__init__(pos, connectors)
-        
+        super().__init__(pos)
+
 
 class Line(ConnectorOverlay):
     def __init__(self, start, end, color="black", linewidth=1):
@@ -117,28 +113,26 @@ class Line(ConnectorOverlay):
 
         if self.vertical:
             self.connectors.append(Hotspot(Vector2(r.w//2, 0) -
-                                  self.overlay.get_rect().center, 6, "output"))
+                                           self.overlay.get_rect().center, 6, "output"))
             self.connectors.append(Hotspot(Vector2(r.w//2, r.h) -
-                                       self.overlay.get_rect().center, 6, "input"))
+                                           self.overlay.get_rect().center, 6, "input"))
         else:
             self.connectors.append(Hotspot(Vector2(0, r.h//2) -
-                                  self.overlay.get_rect().center, 6, "output"))
+                                           self.overlay.get_rect().center, 6, "output"))
             self.connectors.append(Hotspot(Vector2(r.w, r.h//2) -
-                                       self.overlay.get_rect().center, 6, "input"))
+                                           self.overlay.get_rect().center, 6, "input"))
 
         self.draw_connectors()
-
-
 
 
 class Gate(Image):
     def __init__(self, path, pos, size=None):
         super().__init__(path, pos, size)
-        
+
         r = self.create_overlay()
 
         self.connectors.append(Hotspot(Vector2(r.w-10, r.h//2) -
-                              self.overlay.get_rect().center, 6, "output"))
+                                       self.overlay.get_rect().center, 6, "output"))
         for hotspot in ((10, r.h//3), (10, 2*r.h//3)):
             draw.circle(self.overlay, "black", hotspot, 6, 2)
             self.connectors.append(
@@ -146,9 +140,34 @@ class Gate(Image):
 
         self.draw_connectors()
 
+class Input(Image):
+    def __init__(self, pos, size=None):
+        super().__init__("icons/INPUT.svg", pos, size)
+
+        r = self.create_overlay()
+
+        self.connectors.append(Hotspot(Vector2(r.w-8, r.h//2) -
+                                       self.overlay.get_rect().center, 6, "output"))
+
+        self.draw_connectors()
+
+
+class Output(Image):
+    def __init__(self, pos, size=None):
+        super().__init__("icons/OUTPUT.svg", pos, size)
+
+        r = self.create_overlay()
+
+        self.connectors.append(Hotspot(Vector2(8, r.h//2) -
+                                       self.overlay.get_rect().center, 6, "input"))
+
+        self.draw_connectors()
+
+
 class AndGate(Gate):
     def __init__(self, pos, size=None):
         super().__init__("icons/AND_ANSI_Labelled.svg", pos, size)
+
 
 if __name__ == "__main__":
     FPS = 60
@@ -165,6 +184,8 @@ if __name__ == "__main__":
     screen.fill("white")
 
     drawables = [AndGate((x, 300)) for x in (200, 400, 600)]
+    drawables.extend([Input((100,y)) for y in (200,300,400)])
+    drawables.extend([Output((700,y)) for y in (200,300,400)])
 
     # Dragging control variables
     dragging = False
