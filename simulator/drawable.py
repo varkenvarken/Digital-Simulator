@@ -92,38 +92,37 @@ class Line(ConnectorOverlay):
     def __init__(self, start, end, color="black", linewidth=1):
         super().__init__((end + start)//2)
 
-        self.vertical = False
+        vertical = False
         v = end - start
         if abs(v[1]) > abs(v[0]):  # vertical line
-            self.vertical = True
+            vertical = True
+
+
+        # always create the horizontal version
         size = v
-        size[0] = max(linewidth+15, abs(size[0]))
-        size[1] = max(linewidth+15, abs(size[1]))
+        if vertical:
+            size = size.yx
+        size[0] = max(linewidth+15, abs(size[0])) + 10
+        size[1] = max(linewidth+15, abs(size[1])) 
+
         self.surface = Surface(size, pygame.SRCALPHA)
         rect = self.surface.get_rect()
-        if self.vertical:
-            draw.line(self.surface, color, rect.midtop,
-                      rect.midbottom, linewidth)
-        else:
-            draw.line(self.surface, color, rect.midright,
-                      rect.midleft, linewidth)
+        delta = Vector2(5,0)
+        draw.line(self.surface, color, rect.midright-delta,
+                      rect.midleft+delta, linewidth)
         self.surface = self.surface.convert_alpha()
 
         r = self.create_overlay()
 
-        if self.vertical:
-            self.connectors.append(Hotspot(Vector2(r.w//2, 0) -
-                                           self.overlay.get_rect().center, 6, "output"))
-            self.connectors.append(Hotspot(Vector2(r.w//2, r.h) -
-                                           self.overlay.get_rect().center, 6, "input"))
-        else:
-            self.connectors.append(Hotspot(Vector2(0, r.h//2) -
-                                           self.overlay.get_rect().center, 6, "output"))
-            self.connectors.append(Hotspot(Vector2(r.w, r.h//2) -
-                                           self.overlay.get_rect().center, 6, "input"))
+        self.connectors.append(Hotspot(Vector2(5, r.h//2) -
+                                        self.overlay.get_rect().center, 6, "output"))
+        self.connectors.append(Hotspot(Vector2(r.w-5, r.h//2) -
+                                        self.overlay.get_rect().center, 6, "input"))
 
         self.draw_connectors()
 
+        if vertical:
+            self.rotate(90)
 
 class Gate(Image):
     def __init__(self, path, pos, size=None):
