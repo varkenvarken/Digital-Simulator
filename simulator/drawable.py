@@ -34,16 +34,21 @@ class Drawable:
 
 
 class Hotspot:
-    def __init__(self, position, radius):
+    def __init__(self, position, radius, direction):
         self.position = position
         self.radius = radius
+        self.direction = direction
 
 
-class Overlay(Drawable):
-    def __init__(self, pos):
+class ConnectorOverlay(Drawable):
+    def __init__(self, pos, connectors=None):
         super().__init__(pos)
-        self.output = None
-        self.inputs = []
+        self.connectors = connectors
+        if connectors:
+            self.create_overlay()
+            self.draw_connectors()
+        else:
+            self.connectors = []
 
     def create_overlay(self):
         r = self.surface.get_rect()
@@ -51,11 +56,7 @@ class Overlay(Drawable):
         return r
 
     def draw_connectors(self):
-        if self.output:
-            draw.circle(self.overlay, "black", self.output.position +
-                        self.overlay.get_rect().center, self.output.radius, 2)
-
-        for hotspot in self.inputs:
+        for hotspot in self.connectors:
             draw.circle(self.overlay, "black", hotspot.position +
                         self.overlay.get_rect().center, hotspot.radius, 2)
 
@@ -68,21 +69,30 @@ class Overlay(Drawable):
     def rotate(self, angle):
         super().rotate(angle)
         self.overlay = transform.rotate(self.overlay, angle)
-        self.output.position.rotate_ip(-angle)
-        for hotspot in self.inputs:
+        for hotspot in self.connectors:
             hotspot.position.rotate_ip(-angle)
 
+    def collideconnector(self, pos):
+        p = Vector2(pos)
+        rect = self.surface.get_rect()
+        rect.center = self.pos
+        rp = p - rect.center
+        for hotspot in self.connectors:
+            result = (hotspot.position - rp).length() <= hotspot.radius
+            if result:
+                return result, hotspot.position + rect.center
+        return False, None
 
-class Image(Overlay):
-    def __init__(self, path, pos, size=None):
-        super().__init__(pos)
+class Image(ConnectorOverlay):
+    def __init__(self, path, pos, connectors=None, size=None):
         self.surface = image.load(Path(__file__).parent / path)
         if size is not None:
             self.surface = transform.smoothscale(self.surface, size)
         self.surface = self.surface.convert_alpha()
+        super().__init__(pos, connectors)
+        
 
-
-class Line(Overlay):
+class Line(ConnectorOverlay):
     def __init__(self, start, end, color="black", linewidth=1):
         super().__init__((end + start)//2)
 
@@ -106,63 +116,39 @@ class Line(Overlay):
         r = self.create_overlay()
 
         if self.vertical:
-            self.output = Hotspot(Vector2(r.w//2, 0) -
-                                  self.overlay.get_rect().center, 6)
-            self.inputs.append(Hotspot(Vector2(r.w//2, r.h) -
-                                       self.overlay.get_rect().center, 6))
+            self.connectors.append(Hotspot(Vector2(r.w//2, 0) -
+                                  self.overlay.get_rect().center, 6, "output"))
+            self.connectors.append(Hotspot(Vector2(r.w//2, r.h) -
+                                       self.overlay.get_rect().center, 6, "input"))
         else:
-            self.output = Hotspot(Vector2(0, r.h//2) -
-                                  self.overlay.get_rect().center, 6)
-            self.inputs.append(Hotspot(Vector2(r.w, r.h//2) -
-                                       self.overlay.get_rect().center, 6))
+            self.connectors.append(Hotspot(Vector2(0, r.h//2) -
+                                  self.overlay.get_rect().center, 6, "output"))
+            self.connectors.append(Hotspot(Vector2(r.w, r.h//2) -
+                                       self.overlay.get_rect().center, 6, "input"))
 
         self.draw_connectors()
 
-    def collideconnector(self, pos):
-        p = Vector2(pos)
-        rect = self.surface.get_rect()
-        rect.center = self.pos
-        rp = p - rect.center
-        print(rect, self.output.position)
-        result = (self.output.position - rp).length() <= self.output.radius
-        if result:
-            return result, self.output.position + rect.center
-        else:
-            for hotspot in self.inputs:
-                result = (hotspot.position - rp).length() <= hotspot.radius
-                if result:
-                    return result, hotspot.position + rect.center
-        return False, None
 
 
-class AndGate(Image):
-    def __init__(self, pos, size=None):
-        super().__init__("icons/AND_ANSI_Labelled.svg", pos, size)
+
+class Gate(Image):
+    def __init__(self, path, pos, size=None):
+        super().__init__(path, pos, size)
         
         r = self.create_overlay()
 
-        self.output = Hotspot(Vector2(r.w-10, r.h//2) -
-                              self.overlay.get_rect().center, 6)
+        self.connectors.append(Hotspot(Vector2(r.w-10, r.h//2) -
+                              self.overlay.get_rect().center, 6, "output"))
         for hotspot in ((10, r.h//3), (10, 2*r.h//3)):
             draw.circle(self.overlay, "black", hotspot, 6, 2)
-            self.inputs.append(
-                Hotspot(Vector2(hotspot) - self.overlay.get_rect().center, 6))
+            self.connectors.append(
+                Hotspot(Vector2(hotspot) - self.overlay.get_rect().center, 6, "input"))
 
         self.draw_connectors()
-        
-    def collideconnector(self, pos):
-        p = Vector2(pos)
-        rp = p - self.pos
-        result = (self.output.position - rp).length() <= self.output.radius
-        if result:
-            return result, self.output.position + self.pos
-        else:
-            for hotspot in self.inputs:
-                result = (hotspot.position - rp).length() <= hotspot.radius
-                if result:
-                    return result, hotspot.position + self.pos
-        return False, None
 
+class AndGate(Gate):
+    def __init__(self, pos, size=None):
+        super().__init__("icons/AND_ANSI_Labelled.svg", pos, size)
 
 if __name__ == "__main__":
     FPS = 60
