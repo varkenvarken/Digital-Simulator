@@ -2,7 +2,7 @@ from pathlib import Path
 import pygame
 from pygame import image, time, draw, Vector2, locals, font, Rect
 
-from simulator.drawable import Line
+from simulator.drawable import Line, Image
 
 
 class Display:
@@ -85,6 +85,8 @@ class Display:
 
         running = True
         reason = None
+        copy_drawable = None
+
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -136,6 +138,15 @@ class Display:
                     elif event.key == locals.K_s:
                         running = False
                         reason = "Start simulation"
+                    elif event.key == locals.K_c and (event.mod & locals.KMOD_CTRL) and active_object is not None and isinstance(self.drawables[active_object], Image):
+                        copy_drawable = active_object
+                    elif event.key == locals.K_v and (event.mod & locals.KMOD_CTRL) and copy_drawable is not None:
+                        t = type(self.drawables[copy_drawable])
+                        pos = pygame.mouse.get_pos()
+                        print(t)
+                        d = t(pos)
+                        print(d)
+                        self.drawables.append(d)
             self.redraw()
 
             if drawing:
