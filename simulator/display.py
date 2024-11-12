@@ -20,7 +20,7 @@ class Display:
 
         self.clock = time.Clock()
 
-        self.screen = pygame.display.set_mode((width, height))
+        self.screen = pygame.display.set_mode((width, height), flags=pygame.RESIZABLE)
         pygame.display.set_caption(title)
         self.screen.fill("white")
 
@@ -138,9 +138,18 @@ class Display:
                     elif event.key == locals.K_s:
                         running = False
                         reason = "Start simulation"
-                    elif event.key == locals.K_c and (event.mod & locals.KMOD_CTRL) and active_object is not None and isinstance(self.drawables[active_object], Image):
+                    elif (
+                        event.key == locals.K_c
+                        and (event.mod & locals.KMOD_CTRL)
+                        and active_object is not None
+                        and isinstance(self.drawables[active_object], Image)
+                    ):
                         copy_drawable = active_object
-                    elif event.key == locals.K_v and (event.mod & locals.KMOD_CTRL) and copy_drawable is not None:
+                    elif (
+                        event.key == locals.K_v
+                        and (event.mod & locals.KMOD_CTRL)
+                        and copy_drawable is not None
+                    ):
                         t = type(self.drawables[copy_drawable])
                         pos = pygame.mouse.get_pos()
                         print(t)
