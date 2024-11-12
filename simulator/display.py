@@ -44,7 +44,16 @@ class Display:
         draw.line(self.screen, "black", (0, y), (r.w, y))
         draw.line(self.screen, "black", (x, 0), (x, r.h))
 
+    def reset(self):
+        for d in self.drawables:
+            d.on = False
+            d.selected = False
+            d.active = False
+
     def edit(self):
+
+        self.reset()
+
         # Dragging control variables
         dragging = False
         dragged_rect_index = None
@@ -102,7 +111,7 @@ class Display:
                         line_end = Vector2(event.pos)
                 elif event.type == pygame.KEYUP:
                     print(event)
-                    if event.unicode == "r" and active_object is not None:
+                    if event.key == locals.K_r and active_object is not None:
                         self.drawables[active_object].rotate(90)
                     elif event.key == locals.K_s:
                         running = False
@@ -123,9 +132,13 @@ class Display:
 
             self.flip()
         
+        self.screen.fill("white")
+        self.flip()
         return reason
     
     def simulate(self):
+        self.reset()
+
         running = True
         reason = None
         while running:
@@ -133,9 +146,19 @@ class Display:
                 if event.type == pygame.QUIT:
                     running = False
                     reason = "Quit"
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    for i, r in enumerate(self.drawables):
+                        if r.collidepoint(event.pos):
+                            if hasattr(r, "toggle"):
+                                r.toggle()
                 elif event.type == pygame.KEYUP:
                     print(event)
                     if event.key == locals.K_s:
                         running = False
                         reason = "Stop simulation"
+            self.redraw()
+            self.flip()
+            
+        self.screen.fill("white")
+        self.flip()
         return reason

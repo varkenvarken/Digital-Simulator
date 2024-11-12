@@ -16,14 +16,15 @@ display.drawables += drawables
 
 while True:
     reason = display.edit()
+    print(f"command {reason}")
     if reason == "Quit":
         break
     elif reason == "Start simulation":
         reason = display.simulate()
+        print(f"command {reason}")
         if reason == "Quit":
             break
         elif reason == "Stop simulation":
             continue
-    print(f"unknown command {reason}")
     
 display.quit()

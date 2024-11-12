@@ -165,6 +165,12 @@ class Input(Image):
             ]
         )
 
+        self.on = False
+
+    def toggle(self):
+        self.on = not self.on
+        # TODO better display
+        self.selected = self.on
 
 class Output(Image):
     def __init__(self, pos, size=None):
