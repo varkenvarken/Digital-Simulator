@@ -1,8 +1,4 @@
-from pathlib import Path
-import pygame
-from pygame import image, time, Vector2, draw
-
-from simulator.drawable import AndGate, Input, Output, Line
+from simulator.component import AndGate, Input, Output
 
 from simulator.display import Display
 

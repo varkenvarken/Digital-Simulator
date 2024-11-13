@@ -2,7 +2,7 @@ from pathlib import Path
 import pygame
 from pygame import image, time, draw, Vector2, locals, font, Rect
 
-from simulator.drawable import Line, Image, Gate
+from simulator.component import Line, Image, Gate
 
 
 class Display:
