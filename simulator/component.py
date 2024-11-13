@@ -12,14 +12,14 @@ draw.line(unknown, "black", r.topleft, r.bottomright)
 
 class Drawable:
     
-    def __init__(self, pos):
+    def __init__(self, pos, label="unknown"):
         self.selected = False
         self.active = False
         self.pos = Vector2(pos)
         self.angle = 0
         self.listeners = []
         self.state = False
-        self.label = "unknown"
+        self.label = label
 
     def blit(self, surface):
         if self.state:
@@ -58,8 +58,8 @@ class ConnectorOverlay(Drawable):
     # TODO add hotspot labels
     # TODO make connectors reflect on-state
         
-    def __init__(self, pos):
-        super().__init__(pos)
+    def __init__(self, pos, label):
+        super().__init__(pos, label)
         self.connectors = []
 
     def create_overlay(self):
@@ -107,7 +107,7 @@ class ConnectorOverlay(Drawable):
 
 
 class Image(ConnectorOverlay):
-    def __init__(self, path, path_on, pos, size=None):
+    def __init__(self, path, path_on, pos, label, size=None):
         self.surface = image.load(Path(__file__).parent / path)
         self.surface_on = image.load(Path(__file__).parent / path_on)
         if size is not None:
@@ -115,12 +115,12 @@ class Image(ConnectorOverlay):
             self.surface_on = transform.smoothscale(self.surface_on, size)
         self.surface = self.surface.convert_alpha()
         self.surface_on = self.surface_on.convert_alpha()
-        super().__init__(pos)
+        super().__init__(pos, label)
 
 
 class Line(ConnectorOverlay):
     def __init__(self, start, end, color="black", color_on="green", linewidth=1):
-        super().__init__((end + start) // 2)
+        super().__init__((end + start) // 2,"")
 
         vertical = False
         v = end - start
@@ -160,8 +160,8 @@ class Line(ConnectorOverlay):
 
 
 class Gate(Image):
-    def __init__(self, path, path_on, pos, size=None):
-        super().__init__(path, path_on, pos, size)
+    def __init__(self, path, path_on, pos, label, size=None):
+        super().__init__(path, path_on, pos, label, size)
 
         r = self.surface.get_rect()
 
@@ -176,7 +176,7 @@ class Gate(Image):
 
 class Input(Image):
     def __init__(self, pos, size=None):
-        super().__init__("icons/INPUT.svg", "icons/INPUT_ON.svg",pos, size)
+        super().__init__("icons/INPUT.svg", "icons/INPUT_ON.svg",pos, "input", size)
 
         r = self.surface.get_rect()
 
@@ -198,7 +198,7 @@ class Input(Image):
 
 class Output(Image):
     def __init__(self, pos, size=None):
-        super().__init__("icons/OUTPUT.svg", "icons/OUTPUT_ON.svg", pos, size)
+        super().__init__("icons/OUTPUT.svg", "icons/OUTPUT_ON.svg", pos, "output", size)
 
         r = self.surface.get_rect()
 
@@ -207,12 +207,22 @@ class Output(Image):
 
 class AndGate(Gate):
     def __init__(self, pos, size=None):
-        super().__init__("icons/AND_ANSI_Labelled.svg", "icons/AND_ANSI_Labelled_ON.svg", pos, size)
+        super().__init__("icons/AND_ANSI_Labelled.svg", "icons/AND_ANSI_Labelled_ON.svg", pos, "and", size)
 
     def eval(self):
         state = True
         for ci,c in enumerate(self.connectors):
             if c.direction == "input":
                 state = state and c.state
-                print(f"{c.state=} {id(c)=}")
         return state 
+
+class NandGate(Gate):
+    def __init__(self, pos, size=None):
+        super().__init__("icons/NAND_ANSI_Labelled.svg", "icons/NAND_ANSI_Labelled_ON.svg", pos, "nand", size)
+
+    def eval(self):
+        state = True
+        for ci,c in enumerate(self.connectors):
+            if c.direction == "input":
+                state = state and c.state
+        return not state 

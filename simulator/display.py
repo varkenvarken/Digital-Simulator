@@ -25,6 +25,7 @@ class Display:
         self.screen.fill("white")
 
         self.drawables = []
+        self.library = []
 
         self.font = font.Font(None, 16)
 
@@ -54,6 +55,16 @@ class Display:
         for d in self.drawables:
             d.blit(self.screen)
         self.status()
+
+    def redraw_library(self):
+        r = self.screen.get_rect()
+        y = r.h - 80
+        x = 60
+        for d in self.library:
+            d.pos = Vector2(x,y+25)
+            x += 120
+            d.blit(self.screen)
+        draw.line(self.screen, "black", (0,y), (r.w,y))
 
     def draw_guides(self):
         x, y = pygame.mouse.get_pos()
@@ -107,14 +118,27 @@ class Display:
                                 line_end = Vector2(connector_position)
                                 break
                             if r.collidepoint(event.pos):
-                                active_object = i
+                                active_object = r
                                 dragging = True
-                                dragged_rect_index = i
+                                dragged_rect_index = r
                                 # Calculate offset to maintain position relative to click
                                 offset = r.pos - event.pos
                                 for d2 in self.drawables:
                                     d2.active = False
+                                for d2 in self.library:
+                                    d2.active = False
                                 r.active = True
+                                break
+                        for i, r in enumerate(self.library):
+                            if r.collidepoint(event.pos):
+                                active_object = r
+                                copy_drawable = active_object
+                                for d2 in self.drawables:
+                                    d2.active = False
+                                for d2 in self.library:
+                                    d2.active = False
+                                r.active = True
+                                break
                 elif event.type == pygame.MOUSEBUTTONUP:
                     if dragging:
                         # Stop dragging when the mouse button is released
@@ -126,14 +150,13 @@ class Display:
                 elif event.type == pygame.MOUSEMOTION:
                     # Update the position of the drawable while dragging
                     if dragging and dragged_rect_index is not None:
-                        r = self.drawables[dragged_rect_index]
-                        r.pos = event.pos + offset
+                        dragged_rect_index.pos = event.pos + offset
                     elif drawing:
                         line_end = Vector2(event.pos)
                 elif event.type == pygame.KEYUP:
                     print(event)
                     if event.key == locals.K_r and active_object is not None:
-                        self.drawables[active_object].rotate(90)
+                        active_object.rotate(90)
                     elif event.key == locals.K_s:
                         running = False
                         reason = "Start simulation"
@@ -141,7 +164,7 @@ class Display:
                         event.key == locals.K_c
                         and (event.mod & locals.KMOD_CTRL)
                         and active_object is not None
-                        and isinstance(self.drawables[active_object], Image)
+                        and isinstance(active_object, Image)
                     ):
                         copy_drawable = active_object
                     elif (
@@ -149,13 +172,14 @@ class Display:
                         and (event.mod & locals.KMOD_CTRL)
                         and copy_drawable is not None
                     ):
-                        t = type(self.drawables[copy_drawable])
+                        t = type(copy_drawable)
                         pos = pygame.mouse.get_pos()
                         print(t)
                         d = t(pos)
                         print(d)
                         self.drawables.append(d)
             self.redraw()
+            self.redraw_library()
 
             if drawing:
                 dl = line_end - line_start
