@@ -13,10 +13,13 @@ class Drawable:
         self.active = False
         self.pos = Vector2(pos)
         self.angle = 0
+        self.listeners = []
 
     def blit(self, surface):
         rect = self.surface.get_rect()
         rect.center = self.pos
+        if hasattr(self,"on") and self.on:
+            surface.fill("red", rect)
         surface.blit(self.surface, rect)
         if self.active:
             draw.rect(surface, "orange", rect, 2)
@@ -38,7 +41,7 @@ class Hotspot:
         self.position = position
         self.radius = radius
         self.direction = direction
-
+        self.state = False
 
 class ConnectorOverlay(Drawable):
     def __init__(self, pos):
@@ -125,8 +128,8 @@ class Line(ConnectorOverlay):
         r = self.surface.get_rect()
         self.create_connectors(
             [
-                Hotspot(Vector2(5, r.h // 2) - r.center, 6, "output"),
-                Hotspot(Vector2(r.w - 5, r.h // 2) - r.center, 6, "input"),
+                Hotspot(Vector2(5, r.h // 2) - r.center, 6, "bidirectional"),
+                Hotspot(Vector2(r.w - 5, r.h // 2) - r.center, 6, "bidirectional"),
             ]
         )
 
@@ -165,12 +168,11 @@ class Input(Image):
             ]
         )
 
-        self.on = False
+        self.on = True
 
     def toggle(self):
         self.on = not self.on
-        # TODO better display
-        self.selected = self.on
+        
 
 class Output(Image):
     def __init__(self, pos, size=None):
@@ -184,3 +186,11 @@ class Output(Image):
 class AndGate(Gate):
     def __init__(self, pos, size=None):
         super().__init__("icons/AND_ANSI_Labelled.svg", pos, size)
+
+    def eval(self):
+        state = True
+        for ci,c in enumerate(self.connectors):
+            if c.direction == "input":
+                state = state and c.state
+                print(f"{c.state=} {id(c)=}")
+        return state 

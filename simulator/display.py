@@ -2,7 +2,7 @@ from pathlib import Path
 import pygame
 from pygame import image, time, draw, Vector2, locals, font, Rect
 
-from simulator.drawable import Line, Image
+from simulator.drawable import Line, Image, Gate
 
 
 class Display:
@@ -176,9 +176,70 @@ class Display:
         self.flip()
         return reason
 
+    @staticmethod
+    def overlap(a, c1, b, c2):
+        ap = a.pos + c1.position
+        bp = b.pos + c2.position
+        return (ap - bp).length() <= (c1.radius + c2.radius)
+
+    def connect(self):
+        for d in self.drawables:
+            self.listeners = []
+        for d in self.drawables:
+            for i, c in enumerate(d.connectors):
+                if c.direction in ("input", "bidirectional"):
+                    # if this connector may depend on the output of another drawable ...
+                    d.on = False
+                    connected = False
+                    # check all other drawable to see if may produce output
+                    for od in self.drawables:
+                        if d is not od:  # no connections to self are allowed
+                            for oc in od.connectors:
+                                if oc.direction in ("output", "bidirectional"):
+                                    # if there is overlap between the connectors we add a listener to the drawable that produces output
+                                    if self.overlap(d, c, od, oc):
+                                        od.listeners.append((d, c))
+                                        connected = True
+
+    def connections(self):
+        for d in self.drawables:
+            for l in d.listeners:
+                print(d,l)
+
+    def simulation(self) -> bool:
+        # TODO implement actual simulation
+        # TODO make lines, connectors and outputs reflect the 'on' status
+        changed = False
+        for di,d in enumerate(self.drawables):
+            for listener,connector in d.listeners:
+                if isinstance(listener, Gate):
+                    print(f"> {d.on=} {listener.on=} {connector.state=} {id(connector)=}")
+                    if connector.state != d.on:
+                        changed = True
+                    connector.state = d.on
+                    old = listener.on
+                    listener.on = listener.eval()
+                    if old != listener.on:
+                        changed = True
+                    print(f"< {d.on=} {listener.on=} {connector.state=}")
+                else:
+                    if d.on != listener.on:
+                        changed = True
+                        listener.on = d.on
+        return changed
+
     def simulate(self):
         self.mode = "Simulate"
         self.reset()
+
+        self.connect()
+        #self.connections()
+        #return None
+
+        n = 1
+        while self.simulation():
+            n += 1
+        print(f"{n} steps of simulation at the start")
 
         running = True
         reason = None
@@ -192,6 +253,11 @@ class Display:
                         if r.collidepoint(event.pos):
                             if hasattr(r, "toggle"):
                                 r.toggle()
+                                n = 1
+                                while self.simulation():
+                                    n += 1
+                                print(f"{n} steps of simulation after click")
+                                
                 elif event.type == pygame.KEYUP:
                     print(event)
                     if event.key == locals.K_s:
