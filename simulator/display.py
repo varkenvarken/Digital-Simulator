@@ -42,7 +42,6 @@ class Display:
         fg = "black"
         bg = "grey90"
         text = self.mode
-        size = self.font.size(text)
         ren = self.font.render(text, 1, fg, bg)
         rect = self.screen.get_rect()
         y = rect.bottomleft[1] - self.font.get_linesize()
@@ -213,19 +212,19 @@ class Display:
         for di,d in enumerate(self.drawables):
             for listener,connector in d.listeners:
                 if isinstance(listener, Gate):
-                    print(f"> {d.on=} {listener.on=} {connector.state=} {id(connector)=}")
-                    if connector.state != d.on:
+                    print(f"> {d.state=} {listener.state=} {connector.state=} {id(connector)=}")
+                    if connector.state != d.state:
                         changed = True
-                    connector.state = d.on
-                    old = listener.on
-                    listener.on = listener.eval()
-                    if old != listener.on:
+                    connector.state = d.state
+                    old = listener.state
+                    listener.state = listener.eval()
+                    if old != listener.state:
                         changed = True
-                    print(f"< {d.on=} {listener.on=} {connector.state=}")
+                    print(f"< {d.state=} {listener.state=} {connector.state=}")
                 else:
-                    if d.on != listener.on:
+                    if d.state != listener.state:
                         changed = True
-                        listener.on = d.on
+                        listener.state = d.state
         return changed
 
     def simulate(self):

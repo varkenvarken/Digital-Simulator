@@ -1,26 +1,35 @@
 from abc import abstractmethod, ABCMeta
 from typing import Tuple, Sequence
 from pathlib import Path
-from math import radians, sin, cos
 
 import pygame
 from pygame import Surface, draw, Rect, transform, Vector2, image, time
 
+unknown = Surface((16,16), pygame.SRCALPHA)
+r = unknown.get_rect()
+draw.line(unknown, "black", r.bottomleft, r.topright)
+draw.line(unknown, "black", r.topleft, r.bottomright)
 
 class Drawable:
+    
     def __init__(self, pos):
         self.selected = False
         self.active = False
         self.pos = Vector2(pos)
         self.angle = 0
         self.listeners = []
+        self.state = False
+        self.label = "unknown"
 
     def blit(self, surface):
-        rect = self.surface.get_rect()
-        rect.center = self.pos
-        if hasattr(self,"on") and self.on:
-            surface.fill("red", rect)
-        surface.blit(self.surface, rect)
+        if self.state:
+            rect = self.surface.get_rect()
+            rect.center = self.pos
+            surface.blit(self.surface_on, rect)
+        else:
+            rect = self.surface_on.get_rect()
+            rect.center = self.pos
+            surface.blit(self.surface, rect)
         if self.active:
             draw.rect(surface, "orange", rect, 2)
         if self.selected:
@@ -28,6 +37,7 @@ class Drawable:
 
     def rotate(self, angle):
         self.surface = transform.rotate(self.surface, angle)
+        self.surface_on = transform.rotate(self.surface_on, angle)
         self.angle = angle
 
     def collidepoint(self, pos):
@@ -37,13 +47,17 @@ class Drawable:
 
 
 class Hotspot:
-    def __init__(self, position, radius, direction):
+    def __init__(self, position, radius, direction, label=""):
         self.position = position
         self.radius = radius
         self.direction = direction
         self.state = False
+        self.label = label
 
 class ConnectorOverlay(Drawable):
+    # TODO add hotspot labels
+    # TODO make connectors reflect on-state
+        
     def __init__(self, pos):
         super().__init__(pos)
         self.connectors = []
@@ -93,16 +107,19 @@ class ConnectorOverlay(Drawable):
 
 
 class Image(ConnectorOverlay):
-    def __init__(self, path, pos, size=None):
+    def __init__(self, path, path_on, pos, size=None):
         self.surface = image.load(Path(__file__).parent / path)
+        self.surface_on = image.load(Path(__file__).parent / path_on)
         if size is not None:
             self.surface = transform.smoothscale(self.surface, size)
+            self.surface_on = transform.smoothscale(self.surface_on, size)
         self.surface = self.surface.convert_alpha()
+        self.surface_on = self.surface_on.convert_alpha()
         super().__init__(pos)
 
 
 class Line(ConnectorOverlay):
-    def __init__(self, start, end, color="black", linewidth=1):
+    def __init__(self, start, end, color="black", color_on="green", linewidth=1):
         super().__init__((end + start) // 2)
 
         vertical = False
@@ -118,12 +135,17 @@ class Line(ConnectorOverlay):
         size[1] = max(linewidth + 15, abs(size[1]))
 
         self.surface = Surface(size, pygame.SRCALPHA)
+        self.surface_on = Surface(size, pygame.SRCALPHA)
         rect = self.surface.get_rect()
         delta = Vector2(5, 0)
         draw.line(
             self.surface, color, rect.midright - delta, rect.midleft + delta, linewidth
         )
+        draw.line(
+            self.surface_on, color_on, rect.midright - delta, rect.midleft + delta, linewidth
+        )
         self.surface = self.surface.convert_alpha()
+        self.surface_on = self.surface_on.convert_alpha()
 
         r = self.surface.get_rect()
         self.create_connectors(
@@ -138,8 +160,8 @@ class Line(ConnectorOverlay):
 
 
 class Gate(Image):
-    def __init__(self, path, pos, size=None):
-        super().__init__(path, pos, size)
+    def __init__(self, path, path_on, pos, size=None):
+        super().__init__(path, path_on, pos, size)
 
         r = self.surface.get_rect()
 
@@ -154,7 +176,7 @@ class Gate(Image):
 
 class Input(Image):
     def __init__(self, pos, size=None):
-        super().__init__("icons/INPUT.svg", pos, size)
+        super().__init__("icons/INPUT.svg", "icons/INPUT_ON.svg",pos, size)
 
         r = self.surface.get_rect()
 
@@ -171,12 +193,12 @@ class Input(Image):
         self.on = True
 
     def toggle(self):
-        self.on = not self.on
+        self.state = not self.state
         
 
 class Output(Image):
     def __init__(self, pos, size=None):
-        super().__init__("icons/OUTPUT.svg", pos, size)
+        super().__init__("icons/OUTPUT.svg", "icons/OUTPUT_ON.svg", pos, size)
 
         r = self.surface.get_rect()
 
@@ -185,7 +207,7 @@ class Output(Image):
 
 class AndGate(Gate):
     def __init__(self, pos, size=None):
-        super().__init__("icons/AND_ANSI_Labelled.svg", pos, size)
+        super().__init__("icons/AND_ANSI_Labelled.svg", "icons/AND_ANSI_Labelled_ON.svg", pos, size)
 
     def eval(self):
         state = True
