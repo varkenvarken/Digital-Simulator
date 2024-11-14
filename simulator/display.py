@@ -129,16 +129,30 @@ class Display:
                                     d2.active = False
                                 r.active = True
                                 break
-                        for i, r in enumerate(self.library):
-                            if r.collidepoint(event.pos):
-                                active_object = r
-                                copy_drawable = active_object
-                                for d2 in self.drawables:
-                                    d2.active = False
-                                for d2 in self.library:
-                                    d2.active = False
-                                r.active = True
-                                break
+                        else: # only executed if the loop did not break
+                            # check for library click
+                            for i, r in enumerate(self.library):
+                                if r.collidepoint(event.pos):
+                                    # duplicate
+                                    r = type(r)
+                                    pos = Vector2(pygame.mouse.get_pos())
+                                    pos.y -= 0
+                                    r = r(pos)
+                                    self.drawables.append(r)
+                                    
+                                    # drag (duplicate code from regular drag!)
+                                    active_object = r
+                                    dragging = True
+                                    dragged_rect_index = r
+                                    # Calculate offset to maintain position relative to click
+                                    offset = r.pos - event.pos
+                                    for d2 in self.drawables:
+                                        d2.active = False
+                                    for d2 in self.library:
+                                        d2.active = False
+                                    r.active = True
+                                    break
+                        
                 elif event.type == pygame.MOUSEBUTTONUP:
                     if dragging:
                         # Stop dragging when the mouse button is released
