@@ -1,3 +1,4 @@
 test/firsttry.py
 *.pyc
 .coverage
+.vscode/launch.json
