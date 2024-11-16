@@ -1,0 +1,148 @@
+{
+    "button": {
+        "colours": {
+            "dark_bg": "#ffffff",
+            "normal_bg": "#eeeeee",
+            "hovered_bg": "#ddcccc",
+            "disabled_bg": "#444444",
+            "selected_bg": "#444444",
+            "active_bg": "#444444",
+            "normal_text": "#222222",
+            "hovered_text": "#332222",
+            "selected_text": "#666666",
+            "disabled_text": "#6d736f",
+            "active_text": "#6d736f",
+            "normal_border": "#AAAAAA",
+            "hovered_border": "#B0B0B0",
+            "disabled_border": "#808080",
+            "selected_border": "#8080B0",
+            "active_border": "#8080B0",
+            "normal_text_shadow": "#10101070",
+            "hovered_text_shadow": "#10101070",
+            "disabled_text_shadow": "#10101070",
+            "selected_text_shadow": "#10101070",
+            "active_text_shadow": "#10101070"
+        },
+        "font": {
+            "name": "roboto",
+            "size": "12",
+            "bold": "0",
+            "italic": "1",
+            "regular_resource": {
+                "package": "fonts",
+                "resource": "Roboto-Medium.ttf"
+            },
+            "bold_resource": {
+                "package": "fonts",
+                "resource": "Roboto-Bold.ttf"
+            },
+            "italic_resource": {
+                "package": "fonts",
+                "resource": "Roboto-Italic.ttf"
+            },
+            "bold_italic_resource": {
+                "package": "fonts",
+                "resource": "Roboto-BoldItalic.ttf"
+            }
+        },
+        "misc": {
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "4,4,4,4",
+            "border_width": "1",
+            "shadow_width": "0",
+            "tool_tip_delay": "1.0",
+            "text_horiz_alignment": "left",
+            "text_vert_alignment": "top",
+            "text_horiz_alignment_padding": "10",
+            "text_vert_alignment_padding": "5",
+            "text_shadow_size": "0",
+            "text_shadow_offset": "0,0",
+            "state_transitions": {
+                "normal_hovered": "0.5",
+                "hovered_normal": "0.5"
+            }
+        }
+    },
+    "panel": {
+        "colours": {
+            "dark_bg": "#ffffff"
+        }
+    },
+    "window": {
+        "colours": {
+            "dark_bg": "#ffffff"
+        },
+        "misc": {
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "4,4,4,4",
+            "border_width": "1",
+            "shadow_width": "0",
+            "title_bar_height": "20"
+        }
+    },
+    "window.#title_bar": {
+        "misc": {
+            "text_horiz_alignment": "center"
+        }
+    },
+    "selection_list": {
+        "colours": {
+            "normal_bg": "#eeeeee"
+        },
+        "misc": {
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "4,4,4,4",
+            "border_width": "1",
+            "shadow_width": "15",
+            "list_item_height": "30"
+        }
+    },
+    "selection_list.@selection_list_item": {
+        "colours": {
+            "disabled_dark_bg": "#ffffff",
+            "normal_bg": "#eeeeee",
+            "hovered_bg": "#ddcccc",
+            "disabled_bg": "#222222",
+            "selected_bg": "#ccbbbb",
+            "active_bg": "#ffffff",
+            "normal_text": "#222222",
+            "hovered_text": "#332222",
+            "selected_text": "#000000",
+            "disabled_text": "#6d736f",
+            "active_text": "#000000"
+        },
+        "misc": {
+            "border_width": "2"
+        }
+    },
+    "#file_dialog.#file_display_list.#directory_list_item": {
+        "colours": {
+            "normal_bg": "#eeeeee",
+            "disabled_dark_bg": "#ffffff",
+            "hovered_bg": "#ddcccc",
+            "disabled_bg": "#222222",
+            "selected_bg": "#ccbbbb",
+            "active_bg": "#ffffff",
+            "normal_text": "#222222",
+            "hovered_text": "#332222",
+            "selected_text": "#000000",
+            "disabled_text": "#6d736f",
+            "active_text": "#000000"
+        }
+    },
+    "#file_dialog.#file_display_list.#file_list_item": {
+        "colours": {
+            "normal_bg": "#ddeedd",
+            "disabled_dark_bg": "#ffffff",
+            "hovered_bg": "#ddcccc",
+            "disabled_bg": "#222222",
+            "selected_bg": "#ccbbbb",
+            "active_bg": "#ffffff",
+            "normal_text": "#222222",
+            "hovered_text": "#332222",
+            "selected_text": "#000000",
+            "disabled_text": "#6d736f",
+            "active_text": "#000000"
+        }
+    }
+}

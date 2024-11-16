@@ -1,5 +1,7 @@
 from pathlib import Path
 import pygame
+import pygame_gui
+from pygame_gui.windows import ui_file_dialog
 from pygame import image, time, draw, Vector2, locals, font, Rect
 
 from simulator.component import Line, Image, Gate
@@ -13,14 +15,15 @@ class Display:
         width=800,
         height=600,
         title="Drawable test",
-        iconpath="icons/AND_ANSI_Labelled.svg",
+        iconpath="icons/AND_ANSI_Labelled.svg",  # TODO replace by a more distinct logo
     ):
         pygame.init()
         pygame.display.set_icon(image.load(Path(__file__).parent / iconpath))
 
         self.clock = time.Clock()
 
-        self.screen = pygame.display.set_mode((width, height), flags=pygame.RESIZABLE)
+        self.screen = pygame.display.set_mode(
+            (width, height), flags=pygame.RESIZABLE)
         pygame.display.set_caption(title)
         self.screen.fill("white")
 
@@ -31,9 +34,74 @@ class Display:
 
         self.mode = "Edit"
 
+        self.manager = pygame_gui.UIManager(self.screen.get_rect().size, theme_path=Path(__file__).parent / "theme.json")
+
+        self.create_menu()
+
+    def create_menu(self):
+        left = 1
+        toplevel = (("File", self.show_filemenu), ("Edit", self.show_editmenu), ("Help", self.show_helpmenu))
+        self.menu = []
+        for label, callback in toplevel:
+            width = len(label)*10
+            self.menu.append((pygame_gui.elements.UIButton(relative_rect=pygame.Rect((left, 1), (width, 30)),
+                                                           text=label,
+                                                           manager=self.manager), callback))
+            left += width
+
+        fileoptions = [("Open ...", self.show_opendialog), ("Save", self.save), ("Save as ...", self.show_savedialog), ("Quit", self.show_quitdialog)]
+        self.filemenu = []
+        width = max(len(label) for label,_ in fileoptions)*10 + 10
+        height = 30
+        for label, callback in fileoptions:
+            self.filemenu.append((pygame_gui.elements.UIButton(relative_rect=pygame.Rect((4, height), (width, 30)),
+                                                               text=label,
+                                                               manager=self.manager, visible=0), callback))
+            height += 30
+
+    def process_menu_events(self, event):
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            for button, callback in self.menu + self.filemenu:
+                if event.ui_element == button:
+                    callback(event)
+        elif event.type == pygame_gui.UI_FILE_DIALOG_PATH_PICKED:
+            print(event)
+
+    def show_filemenu(self, event):
+        for b, callback in self.filemenu:
+            b.visible = 1
+
+    def hide_filemenu(self):
+        for b, callback in self.filemenu:
+            b.visible = 0
+
+    def save(self):
+        print("save")
+
+    def show_opendialog(self, event):
+        current_files = pygame_gui.windows.ui_file_dialog.UIFileDialog(
+            rect=pygame.Rect(50, 50, 400, 400), manager=self.manager, window_title="Open file").current_file_list
+        self.hide_filemenu()
+
+    def show_savedialog(self, event):
+        current_files = pygame_gui.windows.ui_file_dialog.UIFileDialog(
+            rect=pygame.Rect(50, 50, 400, 400), manager=self.manager, window_title="Save file as").current_file_list
+        self.hide_filemenu()
+
+    def show_quitdialog(self, event):
+        print("quit")
+
+    def show_editmenu(self, event):
+        print("edit")
+
+    def show_helpmenu(self, event):
+        print("help")
+
     def flip(self):
+        self.time_delta = self.clock.tick(self.FPS)/1000.0
+        self.manager.update(self.time_delta)
+        self.manager.draw_ui(self.screen)
         pygame.display.flip()
-        self.clock.tick(self.FPS)
 
     @staticmethod
     def quit():
@@ -61,10 +129,10 @@ class Display:
         y = r.h - 80
         x = 60
         for d in self.library:
-            d.pos = Vector2(x,y+25)
+            d.pos = Vector2(x, y+25)
             x += 120
             d.blit(self.screen)
-        draw.line(self.screen, "black", (0,y), (r.w,y))
+        draw.line(self.screen, "black", (0, y), (r.w, y))
 
     def draw_guides(self):
         x, y = pygame.mouse.get_pos()
@@ -105,14 +173,17 @@ class Display:
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if drawing:
                         self.drawables.append(
-                            Line(line_start, line_end, color="blue", linewidth=2)
+                            Line(line_start, line_end,
+                                 color="blue", linewidth=2)
                         )
                         line_start = line_end
                     else:
                         for i, r in enumerate(self.drawables):
-                            click, connector_position = r.collideconnector(event.pos)
+                            click, connector_position = r.collideconnector(
+                                event.pos)
                             if click:
-                                print(f"click on object {i} output at {event.pos}")
+                                print(f"click on object {
+                                      i} output at {event.pos}")
                                 drawing = True
                                 line_start = Vector2(connector_position)
                                 line_end = Vector2(connector_position)
@@ -129,7 +200,7 @@ class Display:
                                     d2.active = False
                                 r.active = True
                                 break
-                        else: # only executed if the loop did not break
+                        else:  # only executed if the loop did not break
                             # check for library click
                             for i, r in enumerate(self.library):
                                 if r.collidepoint(event.pos):
@@ -139,7 +210,7 @@ class Display:
                                     pos.y -= 0
                                     r = r(pos)
                                     self.drawables.append(r)
-                                    
+
                                     # drag (duplicate code from regular drag!)
                                     active_object = r
                                     dragging = True
@@ -152,7 +223,6 @@ class Display:
                                         d2.active = False
                                     r.active = True
                                     break
-                        
                 elif event.type == pygame.MOUSEBUTTONUP:
                     if dragging:
                         # Stop dragging when the mouse button is released
@@ -192,6 +262,9 @@ class Display:
                         d = t(pos)
                         print(d)
                         self.drawables.append(d)
+                self.process_menu_events(event)
+                self.manager.process_events(event)
+
             self.redraw()
             self.redraw_library()
 
@@ -213,6 +286,7 @@ class Display:
         self.flip()
         return reason
 
+    # TODO separate the actual simulation code from the display code
     @staticmethod
     def overlap(a, c1, b, c2):
         ap = a.pos + c1.position
@@ -220,6 +294,7 @@ class Display:
         return (ap - bp).length() <= (c1.radius + c2.radius)
 
     def connect(self):
+        # TODO detect circular dependencies
         for d in self.drawables:
             self.listeners = []
         for d in self.drawables:
@@ -241,16 +316,17 @@ class Display:
     def connections(self):
         for d in self.drawables:
             for l in d.listeners:
-                print(d,l)
+                print(d, l)
 
     def simulation(self) -> bool:
         # TODO implement actual simulation
         # TODO make lines, connectors and outputs reflect the 'on' status
         changed = False
-        for di,d in enumerate(self.drawables):
-            for listener,connector in d.listeners:
+        for di, d in enumerate(self.drawables):
+            for listener, connector in d.listeners:
                 if isinstance(listener, Gate):
-                    print(f"> {d.state=} {listener.state=} {connector.state=} {id(connector)=}")
+                    print(f"> {d.state=} {listener.state=} {
+                          connector.state=} {id(connector)=}")
                     if connector.state != d.state:
                         changed = True
                     connector.state = d.state
@@ -270,8 +346,8 @@ class Display:
         self.reset()
 
         self.connect()
-        #self.connections()
-        #return None
+        # self.connections()
+        # return None
 
         n = 1
         while self.simulation():
@@ -294,7 +370,7 @@ class Display:
                                 while self.simulation():
                                     n += 1
                                 print(f"{n} steps of simulation after click")
-                                
+
                 elif event.type == pygame.KEYUP:
                     print(event)
                     if event.key == locals.K_s:
