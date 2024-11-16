@@ -41,5 +41,25 @@
         "colours": {
             "normal_bg": "#00ff00"
         }
+    },
+    "#open_file_dialog.#file_display_list.#directory_list_item": {
+        "colours": {
+            "normal_bg": "#ffff00"
+        }
+    },
+    "#open_file_dialog.#file_display_list.#file_list_item": {
+        "colours": {
+            "normal_bg": "#00ff00"
+        }
+    },
+    "#saveas_file_dialog.#file_display_list.#directory_list_item": {
+        "colours": {
+            "normal_bg": "#ffff00"
+        }
+    },
+    "#saveas_file_dialog.#file_display_list.#file_list_item": {
+        "colours": {
+            "normal_bg": "#00ff00"
+        }
     }
 }

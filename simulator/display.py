@@ -17,6 +17,7 @@ class Display:
         title="Drawable test",
         iconpath="icons/AND_ANSI_Labelled.svg",  # TODO replace by a more distinct logo
     ):
+        self.title = title
         pygame.init()
         pygame.display.set_icon(image.load(Path(__file__).parent / iconpath))
 
@@ -24,7 +25,7 @@ class Display:
 
         self.screen = pygame.display.set_mode(
             (width, height), flags=pygame.RESIZABLE)
-        pygame.display.set_caption(title)
+        pygame.display.set_caption(self.title)
         self.screen.fill("white")
 
         self.drawables = []
@@ -37,6 +38,9 @@ class Display:
         self.manager = pygame_gui.UIManager(self.screen.get_rect().size, theme_path=Path(__file__).parent / "theme.json")
 
         self.create_menu()
+
+        self.filename = "new_file.dsim"
+        self.changed = False
 
     def create_menu(self):
         left = 1
@@ -75,17 +79,17 @@ class Display:
         for b, callback in self.filemenu:
             b.visible = 0
 
-    def save(self):
+    def save(self, event):
         print("save")
 
     def show_opendialog(self, event):
         current_files = pygame_gui.windows.ui_file_dialog.UIFileDialog(
-            rect=pygame.Rect(50, 50, 400, 400), manager=self.manager, window_title="Open file").current_file_list
+            rect=pygame.Rect(50, 50, 400, 400), manager=self.manager, window_title="Open file", object_id="#open_file_dialog").current_file_list
         self.hide_filemenu()
 
     def show_savedialog(self, event):
         current_files = pygame_gui.windows.ui_file_dialog.UIFileDialog(
-            rect=pygame.Rect(50, 50, 400, 400), manager=self.manager, window_title="Save file as").current_file_list
+            rect=pygame.Rect(50, 50, 400, 400), manager=self.manager, window_title="Save file as", object_id="#saveas_file_dialog").current_file_list
         self.hide_filemenu()
 
     def show_quitdialog(self, event):
@@ -177,6 +181,7 @@ class Display:
                                  color="blue", linewidth=2)
                         )
                         line_start = line_end
+                        self.changed = True
                     else:
                         for i, r in enumerate(self.drawables):
                             click, connector_position = r.collideconnector(
@@ -210,7 +215,7 @@ class Display:
                                     pos.y -= 0
                                     r = r(pos)
                                     self.drawables.append(r)
-
+                                    self.changed = True
                                     # drag (duplicate code from regular drag!)
                                     active_object = r
                                     dragging = True
@@ -228,6 +233,7 @@ class Display:
                         # Stop dragging when the mouse button is released
                         dragging = False
                         dragged_rect_index = None
+                        self.changed = True
                     elif drawing:
                         if event.button == 3:
                             drawing = False
@@ -235,12 +241,14 @@ class Display:
                     # Update the position of the drawable while dragging
                     if dragging and dragged_rect_index is not None:
                         dragged_rect_index.pos = event.pos + offset
+                        self.changed = True
                     elif drawing:
                         line_end = Vector2(event.pos)
                 elif event.type == pygame.KEYUP:
                     print(event)
                     if event.key == locals.K_r and active_object is not None:
                         active_object.rotate(90)
+                        self.changed = True
                     elif event.key == locals.K_s:
                         running = False
                         reason = "Start simulation"
@@ -262,6 +270,7 @@ class Display:
                         d = t(pos)
                         print(d)
                         self.drawables.append(d)
+                        self.changed = True
                 self.process_menu_events(event)
                 self.manager.process_events(event)
 
@@ -280,6 +289,8 @@ class Display:
             if True:  # TODO make this a toggle
                 self.draw_guides()
 
+            pygame.display.set_caption(f"{'*' if self.changed else ' '} {self.title}")
+        
             self.flip()
 
         self.screen.fill("white")

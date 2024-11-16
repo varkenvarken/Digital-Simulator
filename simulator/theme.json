@@ -144,5 +144,65 @@
             "disabled_text": "#6d736f",
             "active_text": "#000000"
         }
+    },
+    "#open_file_dialog.#file_display_list.#directory_list_item": {
+        "colours": {
+            "normal_bg": "#eeeeee",
+            "disabled_dark_bg": "#ffffff",
+            "hovered_bg": "#ddcccc",
+            "disabled_bg": "#222222",
+            "selected_bg": "#ccbbbb",
+            "active_bg": "#ffffff",
+            "normal_text": "#222222",
+            "hovered_text": "#332222",
+            "selected_text": "#000000",
+            "disabled_text": "#6d736f",
+            "active_text": "#000000"
+        }
+    },
+    "#open_file_dialog.#file_display_list.#file_list_item": {
+        "colours": {
+            "normal_bg": "#ddeedd",
+            "disabled_dark_bg": "#ffffff",
+            "hovered_bg": "#ddcccc",
+            "disabled_bg": "#222222",
+            "selected_bg": "#ccbbbb",
+            "active_bg": "#ffffff",
+            "normal_text": "#222222",
+            "hovered_text": "#332222",
+            "selected_text": "#000000",
+            "disabled_text": "#6d736f",
+            "active_text": "#000000"
+        }
+    },
+    "#saveas_file_dialog.#file_display_list.#directory_list_item": {
+        "colours": {
+            "normal_bg": "#eeeeee",
+            "disabled_dark_bg": "#ffffff",
+            "hovered_bg": "#ddcccc",
+            "disabled_bg": "#222222",
+            "selected_bg": "#ccbbbb",
+            "active_bg": "#ffffff",
+            "normal_text": "#222222",
+            "hovered_text": "#332222",
+            "selected_text": "#000000",
+            "disabled_text": "#6d736f",
+            "active_text": "#000000"
+        }
+    },
+    "#saveas_file_dialog.#file_display_list.#file_list_item": {
+        "colours": {
+            "normal_bg": "#ddeedd",
+            "disabled_dark_bg": "#ffffff",
+            "hovered_bg": "#ddcccc",
+            "disabled_bg": "#222222",
+            "selected_bg": "#ccbbbb",
+            "active_bg": "#ffffff",
+            "normal_text": "#222222",
+            "hovered_text": "#332222",
+            "selected_text": "#000000",
+            "disabled_text": "#6d736f",
+            "active_text": "#000000"
+        }
     }
 }
