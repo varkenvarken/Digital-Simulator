@@ -1,11 +1,15 @@
+import json
 from pathlib import Path
 import pygame
 import pygame_gui
 from pygame_gui.windows import ui_file_dialog
 from pygame import image, time, draw, Vector2, locals, font, Rect
+import pygame_gui.windows.ui_message_window
 
-from simulator.component import Line, Image, Gate
+# note: we need all inputs here because we are going to create components dynamically based on their name
+from simulator.component import Line, Image, Gate, ComponentEncoder, Input, Output,AndGate, NandGate
 
+EXT = ".dsim"
 
 class Display:
     FPS = 60
@@ -35,7 +39,8 @@ class Display:
 
         self.mode = "Edit"
 
-        self.manager = pygame_gui.UIManager(self.screen.get_rect().size, theme_path=Path(__file__).parent / "theme.json")
+        self.manager = pygame_gui.UIManager(self.screen.get_rect(
+        ).size, theme_path=Path(__file__).parent / "theme.json")
 
         self.create_menu()
 
@@ -44,7 +49,8 @@ class Display:
 
     def create_menu(self):
         left = 1
-        toplevel = (("File", self.show_filemenu), ("Edit", self.show_editmenu), ("Help", self.show_helpmenu))
+        toplevel = (("File", self.show_filemenu),
+                    ("Edit", self.show_editmenu), ("Help", self.show_helpmenu))
         self.menu = []
         for label, callback in toplevel:
             width = len(label)*10
@@ -53,9 +59,10 @@ class Display:
                                                            manager=self.manager), callback))
             left += width
 
-        fileoptions = [("Open ...", self.show_opendialog), ("Save", self.save), ("Save as ...", self.show_savedialog), ("Quit", self.show_quitdialog)]
+        fileoptions = [("Open ...", self.show_opendialog), ("Save", self.save),
+                       ("Save as ...", self.show_savedialog), ("Quit", self.show_quitdialog)]
         self.filemenu = []
-        width = max(len(label) for label,_ in fileoptions)*10 + 10
+        width = max(len(label) for label, _ in fileoptions)*10 + 10
         height = 30
         for label, callback in fileoptions:
             self.filemenu.append((pygame_gui.elements.UIButton(relative_rect=pygame.Rect((4, height), (width, 30)),
@@ -70,6 +77,16 @@ class Display:
                     callback(event)
         elif event.type == pygame_gui.UI_FILE_DIALOG_PATH_PICKED:
             print(event)
+            if event.ui_object_id == "#saveas_file_dialog":
+                self.saveas(event.text)
+            elif event.ui_object_id == "#open_file_dialog":
+                self.open(event.text)
+        elif event.type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
+            print(event)
+            if event.ui_object_id == '#overwrite_existing_file_confirmation_dialog':
+                self.do_saveas()
+            if event.ui_object_id == '#discard_changed_file_confirmation_dialog':
+                self.do_open()
 
     def show_filemenu(self, event):
         for b, callback in self.filemenu:
@@ -100,6 +117,73 @@ class Display:
 
     def show_helpmenu(self, event):
         print("help")
+
+    def saveas(self, filename):
+        f = Path(filename)
+        if f.suffix == "":
+            f = f.with_suffix(EXT)
+        self.new_filename = f
+        if f.exists() and not f.is_file():
+            pygame_gui.windows.ui_message_window.UIMessageWindow(rect=pygame.Rect(
+                50, 50, 400, 400), manager=self.manager, window_title="Error selecting file", html_message=f"{filename}<br>is not a file")
+            return
+        elif f.exists():
+            pygame_gui.windows.ui_confirmation_dialog.UIConfirmationDialog(rect=pygame.Rect(
+                50, 50, 400, 400), manager=self.manager, window_title="Confirm overwrite", action_long_desc=f"File {filename} already exists. Do you want to replace it?", action_short_name="Overwrite", object_id='#overwrite_existing_file_confirmation_dialog')
+            return
+        else:
+            self.do_saveas()
+
+    def do_saveas(self):
+        f:Path = self.new_filename
+        # TODO save pretty printed
+        # TODO add HMAC signature
+        print(f"saving as {f}")
+        s = json.dumps({"drawables":self.drawables, "library":self.library}, cls=ComponentEncoder)
+        print(s)
+        with open(f, "w") as output:
+            json.dump({"drawables":self.drawables, "library":self.library}, output, cls=ComponentEncoder, indent=4)
+        self.changed = False
+        self.filename = str(f)
+    
+    def open(self, filename):
+        f = Path(filename)
+        self.new_filename = f
+        if not f.exists() or not f.is_file() or f.suffix != EXT:
+            pygame_gui.windows.ui_message_window.UIMessageWindow(rect=pygame.Rect(
+                50, 50, 400, 400), manager=self.manager, window_title="Error selecting file", html_message=f"{filename}<br>is not a Digital Simulator file")
+            return
+        elif self.changed:
+            pygame_gui.windows.ui_confirmation_dialog.UIConfirmationDialog(rect=pygame.Rect(
+                50, 50, 400, 400), manager=self.manager, window_title="Confirm discarding changes", action_long_desc=f"File {self.filename} has changed. Do you want to discard the changes?", action_short_name="Discard", object_id='#discard_changed_file_confirmation_dialog')
+            return
+        else:
+            self.do_open()
+
+    def do_open(self):
+        with open(self.new_filename) as input:
+            obj = json.load(input)
+        print(obj)
+        # TODO catch key errors etc
+        # TODO verify HMAC
+        drawables = obj["drawables"]
+        library = obj["library"]
+        d_objs = []
+        l_objs = []
+        for d in drawables:
+            t = globals()[d["type"]]
+            d_obj = t(**d["dict"])
+            d_objs.append(d_obj)
+        for l in library:
+            t = globals()[l["type"]]
+            l_obj = t(**l["dict"])
+            l_objs.append(l_obj)
+        
+        self.drawables = d_objs
+        self.library = l_objs
+
+        self.filename = self.new_filename
+        self.changed = False
 
     def flip(self):
         self.time_delta = self.clock.tick(self.FPS)/1000.0
@@ -289,8 +373,9 @@ class Display:
             if True:  # TODO make this a toggle
                 self.draw_guides()
 
-            pygame.display.set_caption(f"{'*' if self.changed else ' '} {self.title}")
-        
+            pygame.display.set_caption(
+                f"{'*' if self.changed else ' '} {self.title} [{self.filename}]")  # TODO ellide very long names  ...ery/long/file.dsim
+
             self.flip()
 
         self.screen.fill("white")

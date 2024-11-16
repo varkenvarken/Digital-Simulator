@@ -1,22 +1,24 @@
 from abc import abstractmethod, ABCMeta
 from typing import Tuple, Sequence
 from pathlib import Path
+import json
 
 import pygame
 from pygame import Surface, draw, Rect, transform, Vector2, image, time
 
-unknown = Surface((16,16), pygame.SRCALPHA)
+unknown = Surface((16, 16), pygame.SRCALPHA)
 r = unknown.get_rect()
 draw.line(unknown, "black", r.bottomleft, r.topright)
 draw.line(unknown, "black", r.topleft, r.bottomright)
 
+
 class Drawable:
-    
-    def __init__(self, pos, label="unknown"):
+
+    def __init__(self, pos, angle=0, label="unknown"):
         self.selected = False
         self.active = False
         self.pos = Vector2(pos)
-        self.angle = 0
+        self.angle = angle
         self.listeners = []
         self.state = False
         self.label = label
@@ -54,12 +56,13 @@ class Hotspot:
         self.state = False
         self.label = label
 
+
 class ConnectorOverlay(Drawable):
     # TODO add hotspot labels
     # TODO make connectors reflect on-state
-        
-    def __init__(self, pos, label):
-        super().__init__(pos, label)
+
+    def __init__(self, pos, angle=0, label="unknown"):
+        super().__init__(pos, angle, label)
         self.connectors = []
 
     def create_overlay(self):
@@ -107,7 +110,7 @@ class ConnectorOverlay(Drawable):
 
 
 class Image(ConnectorOverlay):
-    def __init__(self, path, path_on, pos, label, size=None):
+    def __init__(self, path, path_on, pos, angle=0, label="unknown", size=None):
         self.surface = image.load(Path(__file__).parent / path)
         self.surface_on = image.load(Path(__file__).parent / path_on)
         if size is not None:
@@ -115,12 +118,12 @@ class Image(ConnectorOverlay):
             self.surface_on = transform.smoothscale(self.surface_on, size)
         self.surface = self.surface.convert_alpha()
         self.surface_on = self.surface_on.convert_alpha()
-        super().__init__(pos, label)
+        super().__init__(pos, angle, label)
 
 
 class Line(ConnectorOverlay):
-    def __init__(self, start, end, color="black", color_on="green", linewidth=1):
-        super().__init__((end + start) // 2,"")
+    def __init__(self, start, end, angle=0, label="", color="black", color_on="green", linewidth=1):
+        super().__init__((end + start) // 2, angle, label)
 
         vertical = False
         v = end - start
@@ -142,7 +145,8 @@ class Line(ConnectorOverlay):
             self.surface, color, rect.midright - delta, rect.midleft + delta, linewidth
         )
         draw.line(
-            self.surface_on, color_on, rect.midright - delta, rect.midleft + delta, linewidth
+            self.surface_on, color_on, rect.midright -
+            delta, rect.midleft + delta, linewidth
         )
         self.surface = self.surface.convert_alpha()
         self.surface_on = self.surface_on.convert_alpha()
@@ -151,7 +155,8 @@ class Line(ConnectorOverlay):
         self.create_connectors(
             [
                 Hotspot(Vector2(5, r.h // 2) - r.center, 6, "bidirectional"),
-                Hotspot(Vector2(r.w - 5, r.h // 2) - r.center, 6, "bidirectional"),
+                Hotspot(Vector2(r.w - 5, r.h // 2) -
+                        r.center, 6, "bidirectional"),
             ]
         )
 
@@ -160,8 +165,8 @@ class Line(ConnectorOverlay):
 
 
 class Gate(Image):
-    def __init__(self, path, path_on, pos, label, size=None):
-        super().__init__(path, path_on, pos, label, size)
+    def __init__(self, path, path_on, pos, angle=0, label="unknown", size=None):
+        super().__init__(path, path_on, pos, angle, label, size)
 
         r = self.surface.get_rect()
 
@@ -175,8 +180,8 @@ class Gate(Image):
 
 
 class Input(Image):
-    def __init__(self, pos, size=None):
-        super().__init__("icons/INPUT.svg", "icons/INPUT_ON.svg",pos, "input", size)
+    def __init__(self, pos, angle=0, label="input", size=None):
+        super().__init__("icons/INPUT.svg", "icons/INPUT_ON.svg", pos, angle, label, size)
 
         r = self.surface.get_rect()
 
@@ -194,35 +199,54 @@ class Input(Image):
 
     def toggle(self):
         self.state = not self.state
-        
+
 
 class Output(Image):
-    def __init__(self, pos, size=None):
-        super().__init__("icons/OUTPUT.svg", "icons/OUTPUT_ON.svg", pos, "output", size)
+    def __init__(self, pos, angle=0, label="output", size=None):
+        super().__init__("icons/OUTPUT.svg", "icons/OUTPUT_ON.svg", pos, angle, label, size)
 
         r = self.surface.get_rect()
 
-        self.create_connectors([Hotspot(Vector2(8, r.h // 2) - r.center, 6, "input")])
+        self.create_connectors(
+            [Hotspot(Vector2(8, r.h // 2) - r.center, 6, "input")])
 
 
 class AndGate(Gate):
-    def __init__(self, pos, size=None):
-        super().__init__("icons/AND_ANSI_Labelled.svg", "icons/AND_ANSI_Labelled_ON.svg", pos, "and", size)
+    def __init__(self, pos, angle=0, label="and", size=None):
+        super().__init__("icons/AND_ANSI_Labelled.svg",
+                         "icons/AND_ANSI_Labelled_ON.svg", pos, angle, label, size)
 
     def eval(self):
         state = True
-        for ci,c in enumerate(self.connectors):
+        for ci, c in enumerate(self.connectors):
             if c.direction == "input":
                 state = state and c.state
-        return state 
+        return state
+
 
 class NandGate(Gate):
-    def __init__(self, pos, size=None):
-        super().__init__("icons/NAND_ANSI_Labelled.svg", "icons/NAND_ANSI_Labelled_ON.svg", pos, "nand", size)
+    def __init__(self, pos, angle=0, label="nand", size=None):
+        super().__init__("icons/NAND_ANSI_Labelled.svg",
+                         "icons/NAND_ANSI_Labelled_ON.svg", pos, angle, label, size)
 
     def eval(self):
         state = True
-        for ci,c in enumerate(self.connectors):
+        for ci, c in enumerate(self.connectors):
             if c.direction == "input":
                 state = state and c.state
-        return not state 
+        return not state
+
+
+class ComponentEncoder(json.JSONEncoder):
+    def default(self, obj):
+        # Convert custom classes to dictionaries
+        if isinstance(obj, Drawable):
+            return {
+                "type": obj.__class__.__name__,
+                "dict": {
+                    "pos": obj.pos,
+                    "angle": obj.angle}
+            }
+        elif isinstance(obj, Vector2):
+            return (obj.x, obj.y)
+        return super().default(obj)
