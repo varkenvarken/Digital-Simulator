@@ -1,0 +1,35 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Coverage badge",
+            "type": "shell",
+            "command": "python3 bin/coverage_badge.py coverage.json > illustrations/coverage.svg",
+            "problemMatcher": [],
+            "promptOnClose": false,
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Test badge",
+            "type": "shell",
+            "command": "python3 bin/test_badge.py  test.xml > illustrations/test.svg",
+            "problemMatcher": [],
+            "promptOnClose": false,
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Badges",
+            "dependsOn": [
+                "Test badge",
+                "Coverage badge"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

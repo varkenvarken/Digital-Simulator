@@ -1,6 +1,6 @@
 {
     "python.testing.pytestArgs": [
-        "test"
+        "test", "--junitxml=test.xml", "--cov-report=json"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true

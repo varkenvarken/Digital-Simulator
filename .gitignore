@@ -3,3 +3,5 @@ test/firsttry.py
 .coverage
 .vscode/launch.json
 vavoom.dsim
+coverage.json
+test.xml

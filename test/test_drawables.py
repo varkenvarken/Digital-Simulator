@@ -1,6 +1,7 @@
+import json
 import pygame
 
-from simulator.component import AndGate, NandGate, Input, Output, Line
+from simulator.component import AndGate, NandGate, Input, Output, Line, ComponentEncoder
 
 
 class TestDrawables:
@@ -37,13 +38,32 @@ class TestDrawables:
         assert line.angle == 90
 
     def test_blit(self, _init_pygame, default_ui_manager, _display_surface_return_none):
-        p = (100, 100)
-        g = AndGate(p)
-        s = pygame.display.get_surface()
-        s.fill("white")
-        g.blit(s)
-        assert s.get_at(p) == pygame.Color(255, 255, 255)
+        pos = pygame.math.Vector2(100, 100)
+        pos2 = pygame.math.Vector2(200, 100)
+        center = (pos + pos2) // 2
 
-        g.state = True
-        g.blit(s)
-        assert s.get_at(p) == pygame.Color(0, 255, 0)
+        gate = AndGate(pos)
+        surface = pygame.display.get_surface()
+        surface.fill("white")
+
+        gate.blit(surface)
+        assert surface.get_at(pos) == pygame.Color(255, 255, 255)
+
+        gate.state = True
+        gate.blit(surface)
+        assert surface.get_at(pos) == pygame.Color(0, 255, 0)
+
+        line = Line(pos, pos2)
+        line.blit(surface)
+        assert surface.get_at(pos) == pygame.Color(0,0,0)
+
+        line.state = True
+        line.blit(surface)
+        assert surface.get_at(pos) == pygame.Color(0, 255, 0)
+
+    def test_component_encoder(self, _init_pygame, default_ui_manager, _display_surface_return_none):
+        pos = pygame.math.Vector2(100, 100)
+        pos2 = pygame.math.Vector2(200, 100)
+        s = json.dumps([AndGate(pos),pos,Line(pos,pos2)], cls=ComponentEncoder, indent=None)
+        assert s == '[ {"type": "AndGate", "dict": {"pos": [100.0, 100.0], "angle": 0, "label": "and"}}, [100.0, 100.0], {"type": "Line", "dict": {"start": [100.0, 100.0], "end": [200.0, 100.0], "angle": 0, "label": ""}}]'
+        

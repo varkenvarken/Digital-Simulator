@@ -1,3 +1,5 @@
+![Coverage](illustrations/test.svg) ![Coverage](illustrations/coverage.svg)
+
 # Digital Simulator
 
 A program to design and simulate digital circuits

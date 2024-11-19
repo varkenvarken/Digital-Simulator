@@ -278,8 +278,8 @@ class ComponentEncoder(json.JSONEncoder):
                 "type": obj.__class__.__name__,
                 "dict": {
                     "start": obj.start,
-                    "angle": obj.angle,
                     "end": obj.end,
+                    "angle": obj.angle,
                     "label": obj.label,
                 },
             }
