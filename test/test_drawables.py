@@ -65,5 +65,5 @@ class TestDrawables:
         pos = pygame.math.Vector2(100, 100)
         pos2 = pygame.math.Vector2(200, 100)
         s = json.dumps([AndGate(pos),pos,Line(pos,pos2)], cls=ComponentEncoder, indent=None)
-        assert s == '[ {"type": "AndGate", "dict": {"pos": [100.0, 100.0], "angle": 0, "label": "and"}}, [100.0, 100.0], {"type": "Line", "dict": {"start": [100.0, 100.0], "end": [200.0, 100.0], "angle": 0, "label": ""}}]'
+        assert s == '[{"type": "AndGate", "dict": {"pos": [100.0, 100.0], "angle": 0, "label": "and"}}, [100.0, 100.0], {"type": "Line", "dict": {"start": [100.0, 100.0], "end": [200.0, 100.0], "angle": 0, "label": ""}}]'
         
