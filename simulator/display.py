@@ -7,9 +7,21 @@ from pygame import image, time, draw, Vector2, locals, font, Rect
 import pygame_gui.windows.ui_message_window
 
 # note: we need all inputs here because we are going to create components dynamically based on their name
-from simulator.component import Line, Image, Gate, ComponentEncoder, Input, Output,AndGate, NandGate
+from simulator.component import (
+    ComponentDecoder,
+    Line,
+    Image,
+    Gate,
+    ComponentEncoder,
+    Input,
+    Output,
+    AndGate,
+    NandGate,
+)
+from simulator.simulation import Simulation
 
 EXT = ".dsim"
+
 
 class Display:
     FPS = 60
@@ -27,8 +39,7 @@ class Display:
 
         self.clock = time.Clock()
 
-        self.screen = pygame.display.set_mode(
-            (width, height), flags=pygame.RESIZABLE)
+        self.screen = pygame.display.set_mode((width, height), flags=pygame.RESIZABLE)
         pygame.display.set_caption(self.title)
         self.screen.fill("white")
 
@@ -39,8 +50,9 @@ class Display:
 
         self.mode = "Edit"
 
-        self.manager = pygame_gui.UIManager(self.screen.get_rect(
-        ).size, theme_path=Path(__file__).parent / "theme.json")
+        self.manager = pygame_gui.UIManager(
+            self.screen.get_rect().size, theme_path=Path(__file__).parent / "theme.json"
+        )
 
         self.create_menu()
 
@@ -49,25 +61,47 @@ class Display:
 
     def create_menu(self):
         left = 1
-        toplevel = (("File", self.show_filemenu),
-                    ("Edit", self.show_editmenu), ("Help", self.show_helpmenu))
+        toplevel = (
+            ("File", self.show_filemenu),
+            ("Edit", self.show_editmenu),
+            ("Help", self.show_helpmenu),
+        )
         self.menu = []
         for label, callback in toplevel:
-            width = len(label)*10
-            self.menu.append((pygame_gui.elements.UIButton(relative_rect=pygame.Rect((left, 1), (width, 30)),
-                                                           text=label,
-                                                           manager=self.manager), callback))
+            width = len(label) * 10
+            self.menu.append(
+                (
+                    pygame_gui.elements.UIButton(
+                        relative_rect=pygame.Rect((left, 1), (width, 30)),
+                        text=label,
+                        manager=self.manager,
+                    ),
+                    callback,
+                )
+            )
             left += width
 
-        fileoptions = [("Open ...", self.show_opendialog), ("Save", self.save),
-                       ("Save as ...", self.show_savedialog), ("Quit", self.show_quitdialog)]
+        fileoptions = [
+            ("Open ...", self.show_opendialog),
+            ("Save", self.save),
+            ("Save as ...", self.show_savedialog),
+            ("Quit", self.show_quitdialog),
+        ]
         self.filemenu = []
-        width = max(len(label) for label, _ in fileoptions)*10 + 10
+        width = max(len(label) for label, _ in fileoptions) * 10 + 10
         height = 30
         for label, callback in fileoptions:
-            self.filemenu.append((pygame_gui.elements.UIButton(relative_rect=pygame.Rect((4, height), (width, 30)),
-                                                               text=label,
-                                                               manager=self.manager, visible=0), callback))
+            self.filemenu.append(
+                (
+                    pygame_gui.elements.UIButton(
+                        relative_rect=pygame.Rect((4, height), (width, 30)),
+                        text=label,
+                        manager=self.manager,
+                        visible=0,
+                    ),
+                    callback,
+                )
+            )
             height += 30
 
     def process_menu_events(self, event):
@@ -83,9 +117,9 @@ class Display:
                 self.open(event.text)
         elif event.type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
             print(event)
-            if event.ui_object_id == '#overwrite_existing_file_confirmation_dialog':
+            if event.ui_object_id == "#overwrite_existing_file_confirmation_dialog":
                 self.do_saveas()
-            if event.ui_object_id == '#discard_changed_file_confirmation_dialog':
+            if event.ui_object_id == "#discard_changed_file_confirmation_dialog":
                 self.do_open()
 
     def show_filemenu(self, event):
@@ -101,12 +135,20 @@ class Display:
 
     def show_opendialog(self, event):
         current_files = pygame_gui.windows.ui_file_dialog.UIFileDialog(
-            rect=pygame.Rect(50, 50, 400, 400), manager=self.manager, window_title="Open file", object_id="#open_file_dialog").current_file_list
+            rect=pygame.Rect(50, 50, 400, 400),
+            manager=self.manager,
+            window_title="Open file",
+            object_id="#open_file_dialog",
+        ).current_file_list
         self.hide_filemenu()
 
     def show_savedialog(self, event):
         current_files = pygame_gui.windows.ui_file_dialog.UIFileDialog(
-            rect=pygame.Rect(50, 50, 400, 400), manager=self.manager, window_title="Save file as", object_id="#saveas_file_dialog").current_file_list
+            rect=pygame.Rect(50, 50, 400, 400),
+            manager=self.manager,
+            window_title="Save file as",
+            object_id="#saveas_file_dialog",
+        ).current_file_list
         self.hide_filemenu()
 
     def show_quitdialog(self, event):
@@ -124,38 +166,65 @@ class Display:
             f = f.with_suffix(EXT)
         self.new_filename = f
         if f.exists() and not f.is_file():
-            pygame_gui.windows.ui_message_window.UIMessageWindow(rect=pygame.Rect(
-                50, 50, 400, 400), manager=self.manager, window_title="Error selecting file", html_message=f"{filename}<br>is not a file")
+            pygame_gui.windows.ui_message_window.UIMessageWindow(
+                rect=pygame.Rect(50, 50, 400, 400),
+                manager=self.manager,
+                window_title="Error selecting file",
+                html_message=f"{filename}<br>is not a file",
+            )
             return
         elif f.exists():
-            pygame_gui.windows.ui_confirmation_dialog.UIConfirmationDialog(rect=pygame.Rect(
-                50, 50, 400, 400), manager=self.manager, window_title="Confirm overwrite", action_long_desc=f"File {filename} already exists. Do you want to replace it?", action_short_name="Overwrite", object_id='#overwrite_existing_file_confirmation_dialog')
+            pygame_gui.windows.ui_confirmation_dialog.UIConfirmationDialog(
+                rect=pygame.Rect(50, 50, 400, 400),
+                manager=self.manager,
+                window_title="Confirm overwrite",
+                action_long_desc=f"File {filename} already exists. Do you want to replace it?",
+                action_short_name="Overwrite",
+                object_id="#overwrite_existing_file_confirmation_dialog",
+            )
             return
         else:
             self.do_saveas()
 
     def do_saveas(self):
-        f:Path = self.new_filename
+        f: Path = self.new_filename
         # TODO save pretty printed
         # TODO add HMAC signature
         print(f"saving as {f}")
-        s = json.dumps({"drawables":self.drawables, "library":self.library}, cls=ComponentEncoder)
+        s = json.dumps(
+            {"drawables": self.drawables, "library": self.library}, cls=ComponentEncoder
+        )
         print(s)
         with open(f, "w") as output:
-            json.dump({"drawables":self.drawables, "library":self.library}, output, cls=ComponentEncoder, indent=4)
+            json.dump(
+                {"drawables": self.drawables, "library": self.library},
+                output,
+                cls=ComponentEncoder,
+                indent=4,
+            )
         self.changed = False
         self.filename = str(f)
-    
+
     def open(self, filename):
         f = Path(filename)
         self.new_filename = f
         if not f.exists() or not f.is_file() or f.suffix != EXT:
-            pygame_gui.windows.ui_message_window.UIMessageWindow(rect=pygame.Rect(
-                50, 50, 400, 400), manager=self.manager, window_title="Error selecting file", html_message=f"{filename}<br>is not a Digital Simulator file")
+            pygame_gui.windows.ui_message_window.UIMessageWindow(
+                rect=pygame.Rect(50, 50, 400, 400),
+                manager=self.manager,
+                window_title="Error selecting file",
+                html_message=f"{filename}<br>is not a Digital Simulator file",
+            )
             return
         elif self.changed:
-            pygame_gui.windows.ui_confirmation_dialog.UIConfirmationDialog(rect=pygame.Rect(
-                50, 50, 400, 400), manager=self.manager, window_title="Confirm discarding changes", action_long_desc=f"File {self.filename} has changed. Do you want to discard the changes?", action_short_name="Discard", object_id='#discard_changed_file_confirmation_dialog')
+            pygame_gui.windows.ui_confirmation_dialog.UIConfirmationDialog(
+                rect=pygame.Rect(50, 50, 400, 400),
+                manager=self.manager,
+                window_title="Confirm discarding changes",
+                action_long_desc=f"File {self.filename} has changed. Do you want to discard the changes?",
+                action_short_name="Discard",
+                object_id="#discard_changed_file_confirmation_dialog",
+            )
             return
         else:
             self.do_open()
@@ -163,30 +232,15 @@ class Display:
     def do_open(self):
         with open(self.new_filename) as input:
             obj = json.load(input)
-        print(obj)
-        # TODO catch key errors etc
-        # TODO verify HMAC
-        drawables = obj["drawables"]
-        library = obj["library"]
-        d_objs = []
-        l_objs = []
-        for d in drawables:
-            t = globals()[d["type"]]
-            d_obj = t(**d["dict"])
-            d_objs.append(d_obj)
-        for l in library:
-            t = globals()[l["type"]]
-            l_obj = t(**l["dict"])
-            l_objs.append(l_obj)
-        
-        self.drawables = d_objs
-        self.library = l_objs
+        cd = ComponentDecoder(obj)
+        self.drawables = cd.d_objs
+        self.library = cd.l_objs
 
         self.filename = self.new_filename
         self.changed = False
 
     def flip(self):
-        self.time_delta = self.clock.tick(self.FPS)/1000.0
+        self.time_delta = self.clock.tick(self.FPS) / 1000.0
         self.manager.update(self.time_delta)
         self.manager.draw_ui(self.screen)
         pygame.display.flip()
@@ -217,7 +271,7 @@ class Display:
         y = r.h - 80
         x = 60
         for d in self.library:
-            d.pos = Vector2(x, y+25)
+            d.pos = Vector2(x, y + 25)
             x += 120
             d.blit(self.screen)
         draw.line(self.screen, "black", (0, y), (r.w, y))
@@ -261,18 +315,18 @@ class Display:
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if drawing:
                         self.drawables.append(
-                            Line(line_start, line_end,
-                                 color="blue", linewidth=2)
+                            Line(line_start, line_end, color="blue", linewidth=2)
                         )
                         line_start = line_end
                         self.changed = True
                     else:
                         for i, r in enumerate(self.drawables):
-                            click, connector_position = r.collideconnector(
-                                event.pos)
+                            click, connector_position = r.collideconnector(event.pos)
                             if click:
-                                print(f"click on object {
-                                      i} output at {event.pos}")
+                                print(
+                                    f"click on object {
+                                      i} output at {event.pos}"
+                                )
                                 drawing = True
                                 line_start = Vector2(connector_position)
                                 line_end = Vector2(connector_position)
@@ -374,7 +428,8 @@ class Display:
                 self.draw_guides()
 
             pygame.display.set_caption(
-                f"{'*' if self.changed else ' '} {self.title} [{self.filename}]")  # TODO ellide very long names  ...ery/long/file.dsim
+                f"{'*' if self.changed else ' '} {self.title} [{self.filename}]"
+            )  # TODO ellide very long names  ...ery/long/file.dsim
 
             self.flip()
 
@@ -382,71 +437,15 @@ class Display:
         self.flip()
         return reason
 
-    # TODO separate the actual simulation code from the display code
-    @staticmethod
-    def overlap(a, c1, b, c2):
-        ap = a.pos + c1.position
-        bp = b.pos + c2.position
-        return (ap - bp).length() <= (c1.radius + c2.radius)
-
-    def connect(self):
-        # TODO detect circular dependencies
-        for d in self.drawables:
-            self.listeners = []
-        for d in self.drawables:
-            for i, c in enumerate(d.connectors):
-                if c.direction in ("input", "bidirectional"):
-                    # if this connector may depend on the output of another drawable ...
-                    d.on = False
-                    connected = False
-                    # check all other drawable to see if may produce output
-                    for od in self.drawables:
-                        if d is not od:  # no connections to self are allowed
-                            for oc in od.connectors:
-                                if oc.direction in ("output", "bidirectional"):
-                                    # if there is overlap between the connectors we add a listener to the drawable that produces output
-                                    if self.overlap(d, c, od, oc):
-                                        od.listeners.append((d, c))
-                                        connected = True
-
-    def connections(self):
-        for d in self.drawables:
-            for l in d.listeners:
-                print(d, l)
-
-    def simulation(self) -> bool:
-        # TODO implement actual simulation
-        # TODO make lines, connectors and outputs reflect the 'on' status
-        changed = False
-        for di, d in enumerate(self.drawables):
-            for listener, connector in d.listeners:
-                if isinstance(listener, Gate):
-                    print(f"> {d.state=} {listener.state=} {
-                          connector.state=} {id(connector)=}")
-                    if connector.state != d.state:
-                        changed = True
-                    connector.state = d.state
-                    old = listener.state
-                    listener.state = listener.eval()
-                    if old != listener.state:
-                        changed = True
-                    print(f"< {d.state=} {listener.state=} {connector.state=}")
-                else:
-                    if d.state != listener.state:
-                        changed = True
-                        listener.state = d.state
-        return changed
-
     def simulate(self):
         self.mode = "Simulate"
         self.reset()
 
-        self.connect()
-        # self.connections()
-        # return None
+        simulation = Simulation(self.drawables)
+        simulation.connect()
 
         n = 1
-        while self.simulation():
+        while simulation.simulate():
             n += 1
         print(f"{n} steps of simulation at the start")
 
@@ -463,7 +462,7 @@ class Display:
                             if hasattr(r, "toggle"):
                                 r.toggle()
                                 n = 1
-                                while self.simulation():
+                                while simulation.simulate():
                                     n += 1
                                 print(f"{n} steps of simulation after click")
 

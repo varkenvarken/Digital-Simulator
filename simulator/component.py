@@ -291,3 +291,19 @@ class ComponentEncoder(json.JSONEncoder):
         elif isinstance(obj, Vector2):
             return (obj.x, obj.y)
         return super().default(obj)
+
+
+class ComponentDecoder:
+    def __init__(self, obj):
+        drawables = obj["drawables"]
+        library = obj["library"]
+        self.d_objs = []
+        self.l_objs = []
+        for d in drawables:
+            t = globals()[d["type"]]
+            d_obj = t(**d["dict"])
+            self.d_objs.append(d_obj)
+        for l in library:
+            t = globals()[l["type"]]
+            l_obj = t(**l["dict"])
+            self.l_objs.append(l_obj)

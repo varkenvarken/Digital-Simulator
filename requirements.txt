@@ -2,3 +2,4 @@ pygame_ce
 pygame_gui
 pytest
 pytest-cov
+pytest-timeout
