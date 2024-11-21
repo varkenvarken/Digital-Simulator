@@ -1,4 +1,4 @@
-# import os
+import os
 import pygame
 import pytest
 from pygame_gui.ui_manager import UIManager
@@ -8,8 +8,8 @@ from pygame_gui.core.interfaces import IUIManagerInterface
 @pytest.fixture(scope="module", autouse=True)
 def _init_pygame():
     # Enable these variables to test in same environment as Travis.
-    # os.environ['SDL_VIDEODRIVER'] = 'dummy'
-    # os.environ['SDL_AUDIODRIVER'] = 'disk'
+    os.environ['SDL_VIDEODRIVER'] = 'dummy'
+    os.environ['SDL_AUDIODRIVER'] = 'disk'
     pygame.init()
 
 

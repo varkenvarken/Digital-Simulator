@@ -1,5 +1,7 @@
 import json
 import pytest
+import numpy as np
+
 import pygame
 
 from simulator.component import AndGate, ComponentDecoder, NandGate, Input, Output, Line
@@ -149,19 +151,19 @@ single_and_gate = """
 
 class TestSimulation:
 
-    def test_single_and_gate_connect(self,_init_pygame, default_ui_manager, _display_surface_return_none):
+    def test_single_and_gate_connect(self, _init_pygame, default_ui_manager, _display_surface_return_none):
         obj = json.loads(single_and_gate)
         cd = ComponentDecoder(obj)
         components = cd.d_objs
         simulation = Simulation(components)
         simulation.connect()
         # verify that the right components are loaded
-        assert type(components[0]) == AndGate 
+        assert type(components[0]) == AndGate
         assert type(components[1]) == Input
-        assert type(components[2]) == Input 
-        assert type(components[3]) == Output 
-        assert type(components[4]) == Line 
-        assert type(components[5]) == Line 
+        assert type(components[2]) == Input
+        assert type(components[3]) == Output
+        assert type(components[4]) == Line
+        assert type(components[5]) == Line
         assert type(components[6]) == Line
         # verify that he last Line component gets its input from the output of the AndGate
         assert components[0].listeners[0][0] is components[6]
@@ -176,9 +178,50 @@ class TestSimulation:
         assert components[4].listeners[0][1] is components[0].connectors[1]
         assert components[5].listeners[0][0] is components[0]
         assert components[5].listeners[0][1] is components[0].connectors[2]
+        # verify that the array mapping is correct
+        assert np.all(simulation.operation == [0, 0, 0, 0, 0, 0, 0])
+        assert np.all(simulation.inputmap1 == [4, 1, 2, 6, 1, 2, 0])
+        assert np.all(simulation.inputmap2 == [5, 1, 2, 6, 1, 2, 0])
 
     @pytest.mark.timeout(3)
-    def test_single_and_gate_simulate(self,_init_pygame, default_ui_manager, _display_surface_return_none):
+    def test_single_and_gate_simulate_np(self, _init_pygame, default_ui_manager, _display_surface_return_none):
+        obj = json.loads(single_and_gate)
+        cd = ComponentDecoder(obj)
+        components = cd.d_objs
+        simulation = Simulation(components)
+        simulation.connect()
+        simulation.simulate_np()
+        assert np.all(simulation.output == [0, 0, 0, 0, 0, 0, 0])
+        simulation.simulate_np()
+        assert np.all(simulation.output == [0, 0, 0, 0, 0, 0, 0])
+
+        components[1].state = True
+        components[2].state = True
+        simulation = Simulation(components)
+        simulation.connect()
+        simulation.simulate_np()
+        # first iteration propagates input -> output for the Input components
+        assert np.all(simulation.output == [0, 1, 1, 0, 0, 0, 0])
+        simulation.simulate_np()
+        # this moves on to the Line components connected to the Input componenta
+        assert np.all(simulation.output == [0, 1, 1, 0, 1, 1, 0])
+        simulation.simulate_np()
+        # next the AndGate is evaluate 1 and 1 -> 1
+        assert np.all(simulation.output == [1, 1, 1, 0, 1, 1, 0])
+        simulation.simulate_np()
+        # AndGate output propagates to last Line component
+        assert np.all(simulation.output == [1, 1, 1, 0, 1, 1, 1])
+        changed = simulation.simulate_np()
+        # and then to the Output component
+        assert np.all(simulation.output == [1, 1, 1, 1, 1, 1, 1])
+        assert changed  # assert that is indeed flagged as changed
+        changed = simulation.simulate_np()
+        # and then it should be stable
+        assert np.all(simulation.output == [1, 1, 1, 1, 1, 1, 1])
+        assert not changed
+
+    @pytest.mark.timeout(3)
+    def test_single_and_gate_simulate(self, _init_pygame, default_ui_manager, _display_surface_return_none):
         obj = json.loads(single_and_gate)
         cd = ComponentDecoder(obj)
         components = cd.d_objs
@@ -206,5 +249,10 @@ class TestSimulation:
         assert components[3].state == True  # output
         assert components[1].state == True  # input
         assert components[2].state == True  # input
-        
-        
+
+    @pytest.mark.parametrize("n",(100,200,400,800,1600,3200))
+    def test_simulate_np_benchmark(self, _init_pygame, default_ui_manager, _display_surface_return_none, benchmark, n):
+        components = [ AndGate((100,100)) for i in range(n)]
+        simulation = Simulation(components)
+        simulation.connect()
+        benchmark(simulation.simulate_np)
