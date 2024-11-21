@@ -6,3 +6,5 @@ vavoom.dsim
 coverage.json
 test.xml
 sdlaudio.raw
+.benchmarks/*
+benchmark_*.svg
