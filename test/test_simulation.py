@@ -250,7 +250,7 @@ class TestSimulation:
         assert components[1].state == True  # input
         assert components[2].state == True  # input
 
-    @pytest.mark.parametrize("n",(100,200,400,800,1600,3200))
+    @pytest.mark.parametrize("n",(1000,2000,3000,4000))
     def test_simulate_np_benchmark(self, _init_pygame, default_ui_manager, _display_surface_return_none, benchmark, n):
         components = [ AndGate((100,100)) for i in range(n)]
         simulation = Simulation(components)
