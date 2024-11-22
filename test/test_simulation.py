@@ -148,15 +148,138 @@ single_and_gate = """
     ]
 }"""
 
+three_lines = """
+{
+    "drawables": [
+        {
+            "type": "Input",
+            "dict": {
+                "pos": [
+                    100.0,
+                    200.0
+                ],
+                "angle": 0,
+                "label": "input"
+            }
+        },
+        {
+            "type": "Output",
+            "dict": {
+                "pos": [
+                    700.0,
+                    300.0
+                ],
+                "angle": 0,
+                "label": "output"
+            }
+        },
+        {
+            "type": "Line",
+            "dict": {
+                "start": [
+                    119.0,
+                    200.0
+                ],
+                "end": [
+                    426.0,
+                    200.0
+                ],
+                "angle": 0,
+                "label": ""
+            }
+        },
+        {
+            "type": "Line",
+            "dict": {
+                "start": [
+                    426.0,
+                    200.0
+                ],
+                "end": [
+                    426.0,
+                    299.0
+                ],
+                "angle": 90,
+                "label": ""
+            }
+        },
+        {
+            "type": "Line",
+            "dict": {
+                "start": [
+                    426.0,
+                    299.0
+                ],
+                "end": [
+                    681.0,
+                    299.0
+                ],
+                "angle": 0,
+                "label": ""
+            }
+        }
+    ],
+    "library": [
+        {
+            "type": "AndGate",
+            "dict": {
+                "pos": [
+                    60.0,
+                    545.0
+                ],
+                "angle": 0,
+                "label": "and"
+            }
+        },
+        {
+            "type": "NandGate",
+            "dict": {
+                "pos": [
+                    180.0,
+                    545.0
+                ],
+                "angle": 0,
+                "label": "nand"
+            }
+        },
+        {
+            "type": "Input",
+            "dict": {
+                "pos": [
+                    300.0,
+                    545.0
+                ],
+                "angle": 0,
+                "label": "input"
+            }
+        },
+        {
+            "type": "Output",
+            "dict": {
+                "pos": [
+                    420.0,
+                    545.0
+                ],
+                "angle": 0,
+                "label": "output"
+            }
+        }
+    ]
+}
+"""
+
 
 class TestSimulation:
 
-    def test_single_and_gate_connect(self, _init_pygame, default_ui_manager, _display_surface_return_none):
+    def test_single_and_gate_connect(
+        self, _init_pygame, default_ui_manager, _display_surface_return_none
+    ):
         obj = json.loads(single_and_gate)
         cd = ComponentDecoder(obj)
         components = cd.d_objs
         simulation = Simulation(components)
         simulation.connect()
+
         # verify that the right components are loaded
         assert type(components[0]) == AndGate
         assert type(components[1]) == Input
@@ -165,31 +288,21 @@ class TestSimulation:
         assert type(components[4]) == Line
         assert type(components[5]) == Line
         assert type(components[6]) == Line
-        # verify that he last Line component gets its input from the output of the AndGate
-        assert components[0].listeners[0][0] is components[6]
-        assert components[0].listeners[0][1] is components[6].connectors[0]
-        # verify the Input elements are connected correctly
-        assert components[1].listeners[0][0] is components[4]
-        assert components[1].listeners[0][1] is components[4].connectors[0]
-        assert components[2].listeners[0][0] is components[5]
-        assert components[2].listeners[0][1] is components[5].connectors[0]
-        # verify that the Line components coming from the inputs have the and gate as listener (note: connectors[0] would be the and gate output)
-        assert components[4].listeners[0][0] is components[0]
-        assert components[4].listeners[0][1] is components[0].connectors[1]
-        assert components[5].listeners[0][0] is components[0]
-        assert components[5].listeners[0][1] is components[0].connectors[2]
         # verify that the array mapping is correct
         assert np.all(simulation.operation == [0, 0, 0, 0, 0, 0, 0])
         assert np.all(simulation.inputmap1 == [4, 1, 2, 6, 1, 2, 0])
         assert np.all(simulation.inputmap2 == [5, 1, 2, 6, 1, 2, 0])
 
     @pytest.mark.timeout(3)
-    def test_single_and_gate_simulate_np(self, _init_pygame, default_ui_manager, _display_surface_return_none):
+    def test_single_and_gate_simulate_np(
+        self, _init_pygame, default_ui_manager, _display_surface_return_none
+    ):
         obj = json.loads(single_and_gate)
         cd = ComponentDecoder(obj)
         components = cd.d_objs
         simulation = Simulation(components)
         simulation.connect()
+        simulation.update_inputs()
         simulation.simulate_np()
         assert np.all(simulation.output == [0, 0, 0, 0, 0, 0, 0])
         simulation.simulate_np()
@@ -197,8 +310,7 @@ class TestSimulation:
 
         components[1].state = True
         components[2].state = True
-        simulation = Simulation(components)
-        simulation.connect()
+        simulation.update_inputs()
         simulation.simulate_np()
         # first iteration propagates input -> output for the Input components
         assert np.all(simulation.output == [0, 1, 1, 0, 0, 0, 0])
@@ -220,39 +332,70 @@ class TestSimulation:
         assert np.all(simulation.output == [1, 1, 1, 1, 1, 1, 1])
         assert not changed
 
-    @pytest.mark.timeout(3)
-    def test_single_and_gate_simulate(self, _init_pygame, default_ui_manager, _display_surface_return_none):
-        obj = json.loads(single_and_gate)
+    def test_three_lines_connect(
+        self, _init_pygame, default_ui_manager, _display_surface_return_none
+    ):
+        obj = json.loads(three_lines)
         cd = ComponentDecoder(obj)
         components = cd.d_objs
         simulation = Simulation(components)
         simulation.connect()
-        while simulation.simulate():
-            ...
-        assert components[0].state == False  # andgate
-        assert components[3].state == False  # output
-        assert components[1].state == False  # input
-        assert components[2].state == False  # input
 
-        components[1].toggle()
-        while simulation.simulate():
-            ...
-        assert components[0].state == False  # andgate
-        assert components[3].state == False  # output
-        assert components[1].state == True  # input
-        assert components[2].state == False  # input
+        # verify that the right components are loaded
+        assert type(components[0]) == Input
+        assert type(components[1]) == Output
+        assert type(components[2]) == Line
+        assert type(components[3]) == Line
+        assert type(components[4]) == Line
+        # verify that the array mapping is correct
+        assert np.all(simulation.operation == [0, 0, 0, 0, 0])
+        assert np.all(simulation.inputmap1 == [0, 4, 0, 0, 0])
+        assert np.all(simulation.inputmap2 == [0, 4, 0, 0, 0])
 
-        components[2].toggle()
-        while simulation.simulate():
-            ...
-        assert components[0].state == True  # andgate
-        assert components[3].state == True  # output
-        assert components[1].state == True  # input
-        assert components[2].state == True  # input
+    @pytest.mark.timeout(3)
+    def test_three_lines_simulate_np(
+        self, _init_pygame, default_ui_manager, _display_surface_return_none
+    ):
+        obj = json.loads(three_lines)
+        cd = ComponentDecoder(obj)
+        components = cd.d_objs
+        simulation = Simulation(components)
+        simulation.connect()
+        simulation.update_inputs()
+        simulation.simulate_np()
+        assert np.all(simulation.output == [0, 0, 0, 0, 0])
+        simulation.simulate_np()
+        assert np.all(simulation.output == [0, 0, 0, 0, 0])
 
-    @pytest.mark.parametrize("n",(1000,2000,3000,4000))
-    def test_simulate_np_benchmark(self, _init_pygame, default_ui_manager, _display_surface_return_none, benchmark, n):
-        components = [ AndGate((100,100)) for i in range(n)]
+        components[0].state = True
+        simulation.update_inputs()
+        changed = simulation.simulate_np()
+        # first iteration propagates input -> output for the Input components
+        assert np.all(simulation.output == [1, 0, 0, 0, 0])
+        assert changed
+        changed = simulation.simulate_np()
+        # second iteration propagates input to all lines directly or indirectly connected
+        assert np.all(simulation.output == [1, 0, 1, 1, 1])
+        assert changed
+        # final iteration reaches output
+        changed = simulation.simulate_np()
+        assert np.all(simulation.output == [1, 1, 1, 1, 1])
+        assert changed
+        # and then it should stay stable
+        changed = simulation.simulate_np()
+        assert np.all(simulation.output == [1, 1, 1, 1, 1])
+        assert not changed
+
+    @pytest.mark.parametrize("n", (1000, 2000, 3000, 4000))
+    def test_simulate_np_benchmark(
+        self,
+        _init_pygame,
+        default_ui_manager,
+        _display_surface_return_none,
+        benchmark,
+        n,
+    ):
+        components = [AndGate((100, 100)) for i in range(n)]
         simulation = Simulation(components)
         simulation.connect()
         benchmark(simulation.simulate_np)

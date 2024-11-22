@@ -133,9 +133,9 @@ class Simulation:
         print(f"{self.output=}")
 
     def simulate_np(self) -> bool:
-        print("simulate")
-        self._dump()
-        print("-"*20)
+        # print("simulate")
+        # self._dump()
+        # print("-"*20)
 
         state = self.input1 + 2 * self.input2 + self.operation
         previous_output = self.output
@@ -144,8 +144,8 @@ class Simulation:
         self.input1 = self.output[self.inputmap1]
         self.input2 = self.output[self.inputmap2]
 
-        self._dump()
-        print("-"*20)
+        # self._dump()
+        # print("-"*20)
 
         return np.any(previous_output != self.output)
 
