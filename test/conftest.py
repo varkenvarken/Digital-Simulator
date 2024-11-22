@@ -4,6 +4,8 @@ import pytest
 from pygame_gui.ui_manager import UIManager
 from pygame_gui.core.interfaces import IUIManagerInterface
 
+def pytest_configure(config):
+    pytest.coverage = config.getoption('--cov')
 
 @pytest.fixture(scope="module", autouse=True)
 def _init_pygame():
@@ -30,3 +32,4 @@ def _display_surface_return_none():
     pygame.display.set_mode((800, 600))
     yield None
     pygame.display.quit()
+

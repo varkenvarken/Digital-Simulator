@@ -1,5 +1,6 @@
 import json
 import pytest
+
 import numpy as np
 
 import pygame
@@ -386,6 +387,10 @@ class TestSimulation:
         assert np.all(simulation.output == [1, 1, 1, 1, 1])
         assert not changed
 
+    @pytest.mark.skipif(
+        pytest.coverage,
+        reason="--cov slows down benchmarks tremendously",
+    )
     @pytest.mark.parametrize("n", (1000, 2000, 3000, 4000))
     def test_simulate_np_benchmark(
         self,
