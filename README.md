@@ -1,10 +1,10 @@
-![Coverage](illustrations/test.svg) ![Coverage](illustrations/coverage.svg)
+![Test](illustrations/test.svg) ![Coverage](illustrations/coverage.svg) ![Performance](illustrations/performance.svg)
 
 # Digital Simulator
 
 A program to design and simulate digital circuits
 
-The idea is to create some akin to [Digital](https://github.com/hneemann/Digital) although less ambitious.
+The idea is to create something akin to [Digital](https://github.com/hneemann/Digital) although less ambitious.
 
 We will not implement it in Java, but in Python and use the [PyGame](https://github.com/pygame/pygame) package to render the graphical user interface. Because we use [Pygame-gui](https://github.com/MyreMylar/pygame_gui) for user interface elements like buttons and file dialogs, we will actually use the [Pygame-ce fork](https://github.com/pygame-community/pygame-ce) because pygame-gui has a hard dependency on that and will install it automatically, but that makes no difference to the functionality. I don't see any real advantage of using pygame-ce, but its development does indeed seem to be more active.
 
@@ -60,3 +60,7 @@ pytest with the coverage and perhaps the performance add-ons should do the job, 
 - [ ] nice to have: busses and nets
 
 i.e. ways to label connectors and have them interact in a simulation as well as being able to define Line elements with multiple traces.
+
+## current performance
+
+![Performance graph](illustrations/simulation_benchmark.png)

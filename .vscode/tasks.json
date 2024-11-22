@@ -24,12 +24,33 @@
             }
         },
         {
+            "label": "Performance badge",
+            "type": "shell",
+            "command": "python3 bin/performance_badge.py  .benchmarks/Linux-CPython-3.12-64bit > illustrations/performance.svg",
+            "problemMatcher": [],
+            "promptOnClose": false,
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
             "label": "Badges",
             "dependsOn": [
                 "Test badge",
-                "Coverage badge"
+                "Coverage badge",
+                "Performance badge"
             ],
             "problemMatcher": []
+        },
+        {
+            "label": "Performance graph",
+            "type": "shell",
+            "command": "python3 bin/performance_graph.py .benchmarks/Linux-CPython-3.12-64bit illustrations/simulation_benchmark.png",
+            "problemMatcher": [],
+            "promptOnClose": false,
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
         }
     ]
 }
