@@ -443,11 +443,13 @@ class Display:
 
         simulation = Simulation(self.drawables)
         simulation.connect()
-
+        simulation.update_inputs()
+        
         n = 1
-        while simulation.simulate():
+        while simulation.simulate_np():
             n += 1
         print(f"{n} steps of simulation at the start")
+        simulation.update_components()
 
         running = True
         reason = None
@@ -461,10 +463,12 @@ class Display:
                         if r.collidepoint(event.pos):
                             if hasattr(r, "toggle"):
                                 r.toggle()
+                                simulation.update_inputs()
                                 n = 1
-                                while simulation.simulate():
+                                while simulation.simulate_np():
                                     n += 1
                                 print(f"{n} steps of simulation after click")
+                                simulation.update_components()
 
                 elif event.type == pygame.KEYUP:
                     print(event)
