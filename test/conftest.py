@@ -6,6 +6,7 @@ from pygame_gui.core.interfaces import IUIManagerInterface
 
 def pytest_configure(config):
     pytest.coverage = config.getoption('--cov')
+    pytest.skipifcoverage = pytest.mark.skipif(config.getoption('--cov'), reason="coverage slows down tests")
 
 @pytest.fixture(scope="module", autouse=True)
 def _init_pygame():

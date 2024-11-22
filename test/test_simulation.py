@@ -387,11 +387,13 @@ class TestSimulation:
         assert np.all(simulation.output == [1, 1, 1, 1, 1])
         assert not changed
 
-    @pytest.mark.skipif(
-        pytest.coverage,
-        reason="--cov slows down benchmarks tremendously",
-    )
+    # @pytest.mark.skipif(
+    #     pytest.coverage,
+    #     reason="--cov slows down benchmarks tremendously",
+    # )
+    @pytest.skipifcoverage
     @pytest.mark.parametrize("n", (1000, 2000, 3000, 4000))
+    # @pytest.mark.no_cover  # tests are still executed but go way faster
     def test_simulate_np_benchmark(
         self,
         _init_pygame,
