@@ -387,10 +387,47 @@ class TestSimulation:
         assert np.all(simulation.output == [1, 1, 1, 1, 1])
         assert not changed
 
+    @pytest.mark.timeout(3)
+    def test_three_lines_update_components(
+        self, _init_pygame, default_ui_manager, _display_surface_return_none
+    ):
+        obj = json.loads(three_lines)
+        cd = ComponentDecoder(obj)
+        components = cd.d_objs
+        simulation = Simulation(components)
+        simulation.connect()
+        simulation.update_inputs()
+        simulation.simulate_np()
+        assert np.all(simulation.output == [0, 0, 0, 0, 0])
+        simulation.simulate_np()
+        assert np.all(simulation.output == [0, 0, 0, 0, 0])
+        simulation.update_components()
+        assert all([s.state == o for s, o in zip(
+            components, simulation.output)])
+
+        components[0].state = True
+        simulation.update_inputs()
+        changed = simulation.simulate_np()
+        # first iteration propagates input -> output for the Input components
+        assert np.all(simulation.output == [1, 0, 0, 0, 0])
+        assert changed
+        simulation.update_components()
+        assert all([s.state == o for s, o in zip(
+            components, simulation.output)])
+
+        changed = simulation.simulate_np()
+        # second iteration propagates input to all lines directly or indirectly connected
+        assert np.all(simulation.output == [1, 0, 1, 1, 1])
+        assert changed
+        simulation.update_components()
+        assert all([s.state == o for s, o in zip(
+            components, simulation.output)])
+
     # @pytest.mark.skipif(
     #     pytest.coverage,
     #     reason="--cov slows down benchmarks tremendously",
     # )
+
     @pytest.skipifcoverage
     @pytest.mark.parametrize("n", (1000, 2000, 3000, 4000))
     # @pytest.mark.no_cover  # tests are still executed but go way faster
