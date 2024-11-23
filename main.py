@@ -13,16 +13,16 @@ display.drawables += drawables
 display.library += [AndGate((50,100)), NandGate((50,100)), Input((50,100)), Output((50,100))]
 
 while True:
-    reason = display.edit()
-    print(f"command {reason}")
-    if reason == "Quit":
+    editor = display.edit()
+    for iteration in editor:
+        ...
+    if display.mode == "Quit":
         break
-    elif reason == "Start simulation":
-        reason = display.simulate()
-        print(f"command {reason}")
-        if reason == "Quit":
+    elif display.mode == "Start simulation":
+        simulation = display.simulate()
+        for iteration in simulation:
+            ...
+        if display.mode != "Stop simulation":
             break
-        elif reason == "Stop simulation":
-            continue
     
 display.quit()

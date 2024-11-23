@@ -59,6 +59,8 @@ class Display:
         self.filename = "new_file.dsim"
         self.changed = False
 
+        self.current_files = None
+
     def create_menu(self):
         left = 1
         toplevel = (
@@ -134,21 +136,21 @@ class Display:
         print("save")
 
     def show_opendialog(self, event):
-        current_files = pygame_gui.windows.ui_file_dialog.UIFileDialog(
+        self.current_files = pygame_gui.windows.ui_file_dialog.UIFileDialog(
             rect=pygame.Rect(50, 50, 400, 400),
             manager=self.manager,
             window_title="Open file",
             object_id="#open_file_dialog",
-        ).current_file_list
+        )
         self.hide_filemenu()
 
     def show_savedialog(self, event):
-        current_files = pygame_gui.windows.ui_file_dialog.UIFileDialog(
+        self.current_files = pygame_gui.windows.ui_file_dialog.UIFileDialog(
             rect=pygame.Rect(50, 50, 400, 400),
             manager=self.manager,
             window_title="Save file as",
             object_id="#saveas_file_dialog",
-        ).current_file_list
+        )
         self.hide_filemenu()
 
     def show_quitdialog(self, event):
@@ -308,10 +310,13 @@ class Display:
         copy_drawable = None
 
         while running:
+            yield
             for event in pygame.event.get():
+                # if event.type != pygame.MOUSEMOTION: print(event)
                 if event.type == pygame.QUIT:
                     running = False
-                    reason = "Quit"
+                    self.mode = "Quit"
+                    return
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if drawing:
                         self.drawables.append(
@@ -319,6 +324,7 @@ class Display:
                         )
                         line_start = line_end
                         self.changed = True
+                        continue
                     else:
                         for i, r in enumerate(self.drawables):
                             click, connector_position = r.collideconnector(event.pos)
@@ -390,6 +396,8 @@ class Display:
                     elif event.key == locals.K_s:
                         running = False
                         reason = "Start simulation"
+                        self.mode = reason
+                        return
                     elif (
                         event.key == locals.K_c
                         and (event.mod & locals.KMOD_CTRL)
@@ -454,10 +462,13 @@ class Display:
         running = True
         reason = None
         while running:
+            yield
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
                     reason = "Quit"
+                    self.mode = reason
+                    return
                 elif event.type == pygame.MOUSEBUTTONUP:
                     for i, r in enumerate(self.drawables):
                         if r.collidepoint(event.pos):
@@ -475,6 +486,8 @@ class Display:
                     if event.key == locals.K_s:
                         running = False
                         reason = "Stop simulation"
+                        self.mode = reason
+                        return
             self.redraw()
             self.flip()
 
