@@ -174,7 +174,8 @@ class Line(ConnectorOverlay):
         self.create_connectors(
             [
                 Hotspot(Vector2(5, r.h // 2) - r.center, 6, "bidirectional"),
-                Hotspot(Vector2(r.w - 5, r.h // 2) - r.center, 6, "bidirectional"),
+                Hotspot(Vector2(r.w - 5, r.h // 2) -
+                        r.center, 6, "bidirectional"),
             ]
         )
 
@@ -229,7 +230,8 @@ class Output(Image):
 
         r = self.surface.get_rect()
 
-        self.create_connectors([Hotspot(Vector2(8, r.h // 2) - r.center, 6, "input")])
+        self.create_connectors(
+            [Hotspot(Vector2(8, r.h // 2) - r.center, 6, "input")])
 
 
 class AndGate(Gate):
@@ -243,13 +245,6 @@ class AndGate(Gate):
             size,
         )
 
-    def eval(self):
-        state = True
-        for ci, c in enumerate(self.connectors):
-            if c.direction == "input":
-                state = state and c.state
-        return state
-
 
 class NandGate(Gate):
     def __init__(self, pos, angle=0, label="nand", size=None):
@@ -261,13 +256,6 @@ class NandGate(Gate):
             label,
             size,
         )
-
-    def eval(self):
-        state = True
-        for ci, c in enumerate(self.connectors):
-            if c.direction == "input":
-                state = state and c.state
-        return not state
 
 
 class ComponentEncoder(json.JSONEncoder):
