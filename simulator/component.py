@@ -1,3 +1,6 @@
+# Copyright 2024 - 2024, Michel Anders and the Digital Simulator contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 from abc import abstractmethod, ABCMeta
 from typing import Tuple, Sequence
 from pathlib import Path

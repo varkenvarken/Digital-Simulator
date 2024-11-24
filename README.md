@@ -31,7 +31,7 @@ This project is not so much about digital simulations per se, but more about lea
 
 Besides the project goals there are of course some technical goals we would like to reach to make the program at least a little bit useful:
 
-- [-] simulate all common gates
+- [ ] simulate all common gates
 
   And, Or, Xor, Nand, Nor, NXor, along with some helper elements like an input that can be toggled, and lines to connect components.
 

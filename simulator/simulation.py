@@ -1,3 +1,6 @@
+# Copyright 2024 - 2024, Michel Anders and the Digital Simulator contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 from simulator.component import Gate, AndGate, NandGate, Input, Output, Line
 
 import numpy as np
