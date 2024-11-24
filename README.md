@@ -78,3 +78,21 @@ This graphs shows the current timings for a single simulation step, for a varyin
 ![Performance graph](illustrations/simulation_benchmark.png)
 
 This looks linear but the slope is less than one. This means that we can expect to get better performance as the number of elements increases even more, but at 4000 gates (= roughly the number of gates in a 6502 processor) we could do more than 20000 steps per second. Not bad for a program written in Python!
+
+## installation
+
+For now, nothing fancy:
+
+```bash
+git clone https://github.com/varkenvarken/Digital-Simulator.git
+cd Digital-Simulator
+pip3 install -r requirements.txt
+python3 main.py 
+```
+
+Note: you are advised to do this inside a virtual enviroment or a development container.
+
+## requirements
+
+the current [list of requirements](requirements.txt) is a bit long, but that is because I didn´t bother to separate development and test requirements from the other requirements.
+ 
