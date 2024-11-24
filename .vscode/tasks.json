@@ -34,11 +34,22 @@
             }
         },
         {
+            "label": "Release badge",
+            "type": "shell",
+            "command": "python3 bin/release_badge.py > illustrations/release.svg",
+            "problemMatcher": [],
+            "promptOnClose": false,
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
             "label": "Badges",
             "dependsOn": [
                 "Test badge",
                 "Coverage badge",
-                "Performance badge"
+                "Performance badge",
+                "Release badge"
             ],
             "problemMatcher": []
         },

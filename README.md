@@ -1,4 +1,4 @@
-![Python version](illustrations/python-version.svg) ![Test](illustrations/test.svg) ![Coverage](illustrations/coverage.svg) ![Performance](illustrations/performance.svg)
+![Python version](illustrations/python-version.svg) ![Test](illustrations/test.svg) ![Coverage](illustrations/coverage.svg) ![Performance](illustrations/performance.svg)![Release](illustrations/release.svg)
 
 # Digital Simulator
 
@@ -95,4 +95,3 @@ Note: you are advised to do this inside a virtual enviroment or a development co
 ## requirements
 
 the current [list of requirements](requirements.txt) is a bit long, but that is because I didn´t bother to separate development and test requirements from the other requirements.
- 
