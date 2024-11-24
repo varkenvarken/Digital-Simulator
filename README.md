@@ -1,4 +1,4 @@
-![Test](illustrations/test.svg) ![Coverage](illustrations/coverage.svg) ![Performance](illustrations/performance.svg)
+![Python version](illustrations/python-version.svg) ![Test](illustrations/test.svg) ![Coverage](illustrations/coverage.svg) ![Performance](illustrations/performance.svg)
 
 # Digital Simulator
 
