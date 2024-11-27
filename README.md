@@ -67,6 +67,11 @@ Besides the project goals there are of course some technical goals we would like
 
   (Done: tests for the logic components are working with decent coverage, as is the core simulation, but the coverage for the display/user interaction is still pretty low. We did create test, coverage and performances badges, as well as performance graph.)
 
+- [ ] nice to have: explore mypy
+
+  just to see if it brings something to the table. I tend to use type annotations for core packages, but it is also my least favorite Python feature, mainly because it is very verbose (and plain ugly).
+  Anyway, incorporating [mypy](https://mypy-lang.org/) in the CI workflow might be interesting.
+
 - [ ] nice to have: busses and nets
 
   i.e. ways to label connectors and have them interact in a simulation as well as being able to define Line elements with multiple traces.
