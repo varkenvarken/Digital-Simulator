@@ -32,19 +32,31 @@ that says that the output at the given index should be put into that input array
 The following picture illustrates this more clearly:
 
 ```mermaid
-flowchart TD
-    A[Input 1] --> C((x))
+flowchart LR
+    A[Input 1] --> C((×))
     B[2] --> C
-    D[Input 2] --> E(('+'))
+    D[Input 2] --> E((＋))
     C --> E
+    F[Func] --> G((＋))
+    G
+    E --> G
+    G --> H[Lookup table] --> K[Output]
 ```
 
+```mermaid
+flowchart LR
+    A[Inputmap 1] --> K[Output] -->AA[Input 1]
+    B[Inputmap 2] --> K -->bb[Input 2]
+```
 These operations can be done quickly if we use numpy, which allows us to work on arrays with thousands of entries very efficiently.
-We have a look at the code in a moment. But how do these lookup functions work? Well, let's have a look at the `and` function: 
+We have a look at the code in a moment.
+
+But how do these lookup functions work? Well, let's have a look at the `and` function: 
 it has two inputs and the result can be either 1 or 0, depending on whether all inputs are ones or zeros.
 So if we look at two inputs together, the combination of the two inputs can be 0, 1, 2, or 3, so what we can do is simply create
 a table with 4 entries and index this with this combined input; the result will then be either a 0 or a 1, depending on that input,
 so in this particular case for the `and` function it will be a 1 if the input combination equals 3 and 0 otherwise.
+
 We can do this for all logical operations and then create a combined lookup table that combines the inputs, so always 0, 1, 2, or 3,
 with a function and of course if you want to add this we need to keep some space for those inputs,
 so we multiply this function index by 4 so we get 0 for `and` 4 for `or` 8 for exclusive or etc etc.
@@ -65,7 +77,7 @@ Index|A|B| Func |Out|
 
 If we limit the index to our lookup table to 8 bits, we have 6 bits left to encode our logical functions
 (because two bits are set aside for the input values). This allows us to encode 64 different logical functions,
-and that is more than enough [^2]
+and that is more than enough [^2].
 
 ## Implementation
 
@@ -83,8 +95,16 @@ The code to implement this with numpy is really short (full code in [simulation.
         return np.any(previous_output != self.output)
 ```
 
+So for each logical gate we want to simulate, we put in the appropriate logical function in `self.operation` and set both input arrays to the start values for the iteration [^3] and we calculate the two input maps.
+
+Then we call `simulate_np()`, which will return `True` as long as something has changed.
+
+
+
 [^1]: "premature optimization is the root of all evil" Tony Hoare (popularized by Donald Knuth)
 
 [^2]: this can in fact encode *all* possible 2-input binary functions, including weird ones that always return 0 or 1 regardless what the input is.
 The two inputs allow for four possible input combinations and any response is either a 0 or a 1, so there are 2^4 = 16 different output functions possible in total.
 More in this [Wikipedia article](https://en.wikipedia.org/wiki/Truth_table#Sentential_operator_truth_tables)
+
+[^3]: this is only necessary for gate inputs connected to input elements that can be set interactively by the user, or are clock inputs, for the other gates the values will ripple trhought the whole circuit during the simulation
