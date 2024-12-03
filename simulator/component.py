@@ -193,18 +193,20 @@ class Gate(Image):
         r = self.surface.get_rect()
 
         self.create_connectors(
-            [Hotspot(Vector2(r.w - 10, r.h // 2) - r.center, 6, "output")]
+            [Hotspot(Vector2(r.w, r.h // 2) - r.center, 6, "output")]
             + [
                 Hotspot(Vector2(hotspot) - r.center, 6, "input")
-                for hotspot in ((10, r.h // 3), (10, 2 * r.h // 3))
+                for hotspot in ((0, r.h // 3), (0, 2 * r.h // 3))
             ]
         )
 
+    def draw_connectors(self):
+        ...
 
 class Input(Image):
     def __init__(self, pos, angle=0, label="input", size=None):
         super().__init__(
-            "icons/INPUT.svg", "icons/INPUT_ON.svg", pos, angle, label, size
+            "icons/80x60/INPUT_OFF.svg", "icons/80x60/INPUT_ON.svg", pos, angle, label, size
         )
 
         r = self.surface.get_rect()
@@ -212,7 +214,7 @@ class Input(Image):
         self.create_connectors(
             [
                 Hotspot(
-                    Vector2(r.w - 8, r.h // 2) - r.center,
+                    Vector2(r.w, r.h // 2) - r.center,
                     6,
                     "output",
                 )
@@ -228,20 +230,20 @@ class Input(Image):
 class Output(Image):
     def __init__(self, pos, angle=0, label="output", size=None):
         super().__init__(
-            "icons/OUTPUT.svg", "icons/OUTPUT_ON.svg", pos, angle, label, size
+            "icons/80x60/OUTPUT_OFF.svg", "icons/80x60/OUTPUT_ON.svg", pos, angle, label, size
         )
 
         r = self.surface.get_rect()
 
         self.create_connectors(
-            [Hotspot(Vector2(8, r.h // 2) - r.center, 6, "input")])
+            [Hotspot(Vector2(0, r.h // 2) - r.center, 6, "input")])
 
 
 class AndGate(Gate):
     def __init__(self, pos, angle=0, label="and", size=None):
         super().__init__(
-            "icons/AND_ANSI_Labelled.svg",
-            "icons/AND_ANSI_Labelled_ON.svg",
+            "icons/80x60/AND_OFF.svg",
+            "icons/80x60/AND_ON.svg",
             pos,
             angle,
             label,
@@ -252,8 +254,8 @@ class AndGate(Gate):
 class NandGate(Gate):
     def __init__(self, pos, angle=0, label="nand", size=None):
         super().__init__(
-            "icons/NAND_ANSI_Labelled.svg",
-            "icons/NAND_ANSI_Labelled_ON.svg",
+            "icons/80x60/NAND_OFF.svg",
+            "icons/80x60/NAND_ON.svg",
             pos,
             angle,
             label,
