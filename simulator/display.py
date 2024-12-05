@@ -26,6 +26,10 @@ from simulator.simulation import Simulation
 EXT = ".dsim"
 
 
+def grid(value, dp=10):
+    return int(((value / dp) + 0.5))*dp                 # 14 -> 10, 15 -> 20
+
+
 class Display:
     FPS = 60
 
@@ -42,7 +46,8 @@ class Display:
 
         self.clock = time.Clock()
 
-        self.screen = pygame.display.set_mode((width, height), flags=pygame.RESIZABLE)
+        self.screen = pygame.display.set_mode(
+            (width, height), flags=pygame.RESIZABLE)
         pygame.display.set_caption(self.title)
         self.screen.fill("white")
 
@@ -183,7 +188,8 @@ class Display:
                 rect=pygame.Rect(50, 50, 400, 400),
                 manager=self.manager,
                 window_title="Confirm overwrite",
-                action_long_desc=f"File {filename} already exists. Do you want to replace it?",
+                action_long_desc=f"File {
+                    filename} already exists. Do you want to replace it?",
                 action_short_name="Overwrite",
                 object_id="#overwrite_existing_file_confirmation_dialog",
             )
@@ -226,7 +232,8 @@ class Display:
                 rect=pygame.Rect(50, 50, 400, 400),
                 manager=self.manager,
                 window_title="Confirm discarding changes",
-                action_long_desc=f"File {self.filename} has changed. Do you want to discard the changes?",
+                action_long_desc=f"File {
+                    self.filename} has changed. Do you want to discard the changes?",
                 action_short_name="Discard",
                 object_id="#discard_changed_file_confirmation_dialog",
             )
@@ -322,19 +329,24 @@ class Display:
                     return
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if drawing:
+                        line_end = Vector2(
+                            (grid(line_end.x), grid(line_end.y)))
                         self.drawables.append(
-                            Line(line_start, line_end, color="blue", linewidth=2)
+                            Line(line_start, line_end,
+                                 color="blue", linewidth=3)
                         )
+                        print(line_start, line_end)
                         line_start = line_end
                         self.changed = True
                         continue
                     else:
                         for i, r in enumerate(self.drawables):
-                            click, connector_position = r.collideconnector(event.pos)
+                            click, connector_position = r.collideconnector(
+                                event.pos)
                             if click:
                                 print(
                                     f"click on object {
-                                      i} output at {event.pos}"
+                                        i} output at {event.pos}"
                                 )
                                 drawing = True
                                 line_start = Vector2(connector_position)
@@ -439,7 +451,8 @@ class Display:
                 self.draw_guides()
 
             pygame.display.set_caption(
-                f"{'*' if self.changed else ' '} {self.title} [{self.filename}]"
+                f"{'*' if self.changed else ' '} {
+                    self.title} [{self.filename}]"
             )  # TODO ellide very long names  ...ery/long/file.dsim
 
             self.flip()
@@ -455,6 +468,8 @@ class Display:
         simulation = Simulation(self.drawables)
         simulation.connect()
         simulation.update_inputs()
+
+        simulation._dump()
         
         n = 1
         while simulation.simulate_np():

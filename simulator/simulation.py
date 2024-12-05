@@ -12,13 +12,16 @@ class Simulation:
     def __init__(self, components):
         self.components = components
 
-        self.n = len(self.components)
+        self.n = len(self.components) + 1  # extra point because we will point unconnected inputs to this last spot (that will be set to always false)
         # gate inputs, maximum 2
         self.input1 = np.zeros(self.n, dtype=bool)
         self.input2 = np.zeros(self.n, dtype=bool)
         # input mappings, i.e. which output will this input gets its new value from
         self.inputmap1 = np.zeros(self.n, dtype=np.int32)
         self.inputmap2 = np.zeros(self.n, dtype=np.int32)
+        # last inputs (of a dummy element) point to themselves    
+        self.inputmap1[:] = self.n-1
+        self.inputmap2[:] = self.n-1
         # the result
         self.output = np.ndarray(self.n, dtype=bool)
         # the logical operation. inputs, outputs and lines have 0 too (i.e. perform an and operation)
@@ -77,14 +80,14 @@ class Simulation:
                     component.inputmap.append(other_component_index)
 
     def _find_connected_output(self, component):
-        visisted = set()
+        visited = set()
         queue = [component]
         while len(queue):
             component = queue.pop(0)
 
-            if component in visisted:
+            if component in visited:
                 break
-            visisted.add(component)
+            visited.add(component)
 
             for other_component_index, other_component in enumerate(self.components):
                 if (
@@ -103,8 +106,18 @@ class Simulation:
                                     other_component_connector,
                                 ):
                                     return other_component_index
-                    # if not, and the other component is a Line, we will follow that Line to see if it is connected to an output
-                    queue.append(other_component)
+                    # if not, and the other component is a Line, and we have overlap with it, we will follow that Line to see if it is connected to an output
+                    if isinstance(other_component, Line):
+                        for connector_index, connector in enumerate(component.connectors):
+                            for other_component_connector in other_component.connectors:
+                                if self.overlap(
+                                        component,
+                                        connector,
+                                        other_component,
+                                        other_component_connector,
+                                    ):
+                                    queue.append(other_component)
+                                    break
         return None
 
     def connect(self):
@@ -156,7 +169,7 @@ class Simulation:
                         self.inputmap2[component_index] = other_component_index
 
     def _dump(self):  # pragma: no cover
-        print([f"{i}:{type(c).__name__}" for i, c in enumerate(self.components)])
+        print([f"{i}:{type(c).__name__}" for i, c in enumerate(self.components, start=1)])
         print(f"{self.input1=}")
         print(f"{self.input2=}")
         print(f"{self.inputmap1=}")

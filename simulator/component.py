@@ -133,7 +133,7 @@ class Line(ConnectorOverlay):
         label="",
         color="black",
         color_on="green",
-        linewidth=1,
+        linewidth=3,
     ):
         start = Vector2(start)
         end = Vector2(end)
@@ -153,21 +153,22 @@ class Line(ConnectorOverlay):
         size = v
         if vertical:
             size = size.yx
-        size[0] = max(linewidth + 15, abs(size[0])) + 10
-        size[1] = max(linewidth + 15, abs(size[1]))
+        # note that the sizes should be a multiple of 10 ... but 0 is a multiple of 10 too :-)
+        size[0] = abs(size[0])
+        size[1] = max(10, abs(size[1]))  # this will make it at least 10px high
 
         self.surface = Surface(size, pygame.SRCALPHA)
         self.surface_on = Surface(size, pygame.SRCALPHA)
         rect = self.surface.get_rect()
         delta = Vector2(5, 0)
         draw.line(
-            self.surface, color, rect.midright - delta, rect.midleft + delta, linewidth
+            self.surface, color, rect.midright, rect.midleft, linewidth
         )
         draw.line(
             self.surface_on,
             color_on,
-            rect.midright - delta,
-            rect.midleft + delta,
+            rect.midright,
+            rect.midleft,
             linewidth,
         )
         self.surface = self.surface.convert_alpha()
@@ -176,8 +177,8 @@ class Line(ConnectorOverlay):
         r = self.surface.get_rect()
         self.create_connectors(
             [
-                Hotspot(Vector2(5, r.h // 2) - r.center, 6, "bidirectional"),
-                Hotspot(Vector2(r.w - 5, r.h // 2) -
+                Hotspot(Vector2(0, r.h // 2) - r.center, 6, "bidirectional"),
+                Hotspot(Vector2(r.w, r.h // 2) -
                         r.center, 6, "bidirectional"),
             ]
         )
@@ -185,6 +186,8 @@ class Line(ConnectorOverlay):
         if vertical:
             self.rotate(90)
 
+    def draw_connectors(self):
+        ...  # do not draw the connectors
 
 class Gate(Image):
     def __init__(self, path, path_on, pos, angle=0, label="unknown", size=None):
@@ -202,6 +205,7 @@ class Gate(Image):
 
     def draw_connectors(self):
         ...
+
 
 class Input(Image):
     def __init__(self, pos, angle=0, label="input", size=None):
